@@ -15,7 +15,7 @@ type GoalPlayer = {
 
 	teams?: {
 	  name: string
-	}
+	}[]
 }
 
 export default function Game1Page() {
@@ -280,8 +280,8 @@ export default function Game1Page() {
                 value={player.id}
               >
 				{player.name}
-				{player.teams
-				  ? ` (${player.teams.name})`
+				{player.teams?.[0]
+				  ? ` (${player.teams[0].name})`
 				  : ''}
               </option>
             ))}
