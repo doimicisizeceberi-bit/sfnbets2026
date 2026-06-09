@@ -1,26 +1,212 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background-start: #0f172a;
+  --background-end: #1e3a8a;
+
+  --card-bg: rgba(255, 255, 255, 0.12);
+  --card-border: rgba(255, 255, 255, 0.2);
+
+  --text-main: #ffffff;
+  --text-muted: #d1d5db;
+
+  --green: #16a34a;
+  --red: #dc2626;
+  --yellow: #facc15;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
   font-family: Arial, Helvetica, sans-serif;
+
+  color: var(--text-main);
+
+  background:
+    radial-gradient(circle at top left,
+      rgba(255,255,255,0.08),
+      transparent 25%),
+
+    radial-gradient(circle at bottom right,
+      rgba(255,255,255,0.05),
+      transparent 25%),
+
+    linear-gradient(
+      135deg,
+      var(--background-start),
+      var(--background-end)
+    );
+
+  background-attachment: fixed;
+}
+
+/* subtle football pattern */
+
+body::before {
+  content: "⚽ ⚽ ⚽";
+  position: fixed;
+  inset: 0;
+
+  font-size: 180px;
+  opacity: 0.03;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  pointer-events: none;
+}
+
+/* links */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* dashboard cards */
+
+.dashboard-card {
+  background: var(--card-bg);
+
+  border: 1px solid var(--card-border);
+
+  backdrop-filter: blur(12px);
+
+  border-radius: 24px;
+
+  padding: 40px;
+
+  font-size: 32px;
+  font-weight: bold;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+
+  background: rgba(255,255,255,0.18);
+}
+
+/* page containers */
+
+.page-container {
+  padding: 40px;
+}
+
+/* glass panels */
+
+.glass-panel {
+  background: rgba(255,255,255,0.1);
+
+  border: 1px solid rgba(255,255,255,0.15);
+
+  backdrop-filter: blur(10px);
+
+  border-radius: 24px;
+
+  padding: 24px;
+}
+
+/* buttons */
+
+.btn-primary {
+  background: white;
+  color: #111827;
+
+  border: none;
+  border-radius: 12px;
+
+  padding: 12px 20px;
+
+  font-weight: bold;
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.btn-primary:hover {
+  transform: scale(1.03);
+}
+
+/* inputs */
+
+.input-modern {
+  width: 100%;
+
+  background: rgba(255,255,255,0.12);
+
+  border: 1px solid rgba(255,255,255,0.2);
+
+  color: white;
+
+  border-radius: 12px;
+
+  padding: 12px;
+}
+
+.input-modern::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+/* tables */
+
+.table-modern {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-modern th {
+  text-align: left;
+
+  padding: 16px;
+
+  color: white;
+
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.table-modern td {
+  padding: 16px;
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.table-modern tr:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* status pills */
+
+.status-active {
+  background: var(--green);
+  color: white;
+
+  border: none;
+  border-radius: 999px;
+
+  padding: 8px 16px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.status-inactive {
+  background: var(--red);
+  color: white;
+
+  border: none;
+  border-radius: 999px;
+
+  padding: 8px 16px;
+
+  font-weight: bold;
+
+  cursor: pointer;
 }
