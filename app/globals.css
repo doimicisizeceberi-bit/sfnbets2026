@@ -145,9 +145,24 @@ a {
 
   color: white;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
-  padding: 12px;
+  padding: 10px 14px;
+
+  font-size: 14px;
+
+  min-height: 42px;
+
+  outline: none;
+}
+
+.input-modern option {
+  background: #1e293b;
+  color: white;
+}
+
+.input-modern:disabled {
+  opacity: 0.7;
 }
 
 .input-modern::placeholder {
