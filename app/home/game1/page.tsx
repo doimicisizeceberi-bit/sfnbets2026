@@ -13,9 +13,7 @@ type GoalPlayer = {
   id: number
   name: string
 
-  teams?: {
-    name: string
-  }
+  teams?: any
 }
 
 export default function Game1Page() {
