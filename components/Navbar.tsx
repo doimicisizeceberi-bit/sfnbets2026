@@ -40,6 +40,21 @@ export default function Navbar() {
         >
           Players
         </Link>
+		
+		<Link
+		  href="/admin"
+		  target="_blank"
+		  rel="noopener noreferrer"
+          className="hover:opacity-70"
+		>
+		  Admin
+		</Link>	
+		<Link
+		  href="/logout"
+          className="hover:opacity-70"
+		>
+		  Logout
+		</Link>
 
       </div>
     </nav>

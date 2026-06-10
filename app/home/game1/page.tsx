@@ -13,9 +13,9 @@ type GoalPlayer = {
   id: number
   name: string
 
-	teams?: {
-	  name: string
-	}[]
+  teams?: {
+    name: string
+  }
 }
 
 export default function Game1Page() {
@@ -30,7 +30,11 @@ export default function Game1Page() {
   const [topGoal, setTopGoal] = useState('')
   const [surprise, setSurprise] = useState('')
 
-  const [locked, setLocked] = useState(false)
+const [locked, setLocked] = useState(false)
+
+const [message, setMessage] = useState('')
+
+const [leaderboard, setLeaderboard] = useState<any[]>([])
 
   useEffect(() => {
     loadData()
@@ -49,13 +53,13 @@ export default function Game1Page() {
 
 	const { data: goalData } = await supabase
 	  .from('top_goal')
-	  .select(`
-		id,
-		name,
-		teams (
-		  name
-		)
-	  `)
+				.select(`
+				  id,
+				  name,
+				  teams:team_id (
+					name
+				  )
+				`)
   .order('name')
 
     if (goalData) {
@@ -96,39 +100,180 @@ export default function Game1Page() {
 
       setLocked(resultData.locked)
     }
+	
+	await loadLeaderboard()
   }
 
-  async function saveResults(newLocked: boolean) {
+async function updateResults() {
 
-    await supabase
-      .from('game1_results')
-      .upsert({
-        id: 1,
+  const { error } = await supabase
+    .from('game1_results')
+    .upsert({
+      id: 1,
 
-        champion_team_id: champion,
-        finalist_team_id: finalist,
+      champion_team_id: champion,
+      finalist_team_id: finalist,
 
-        semifinalist1_team_id: semi1,
-        semifinalist2_team_id: semi2,
+      semifinalist1_team_id: semi1,
+      semifinalist2_team_id: semi2,
 
-        top_goal_player_id: topGoal,
+      top_goal_player_id: topGoal,
 
-        surprise_team_id: surprise,
+      surprise_team_id: surprise,
 
-        locked: newLocked,
-      })
+      locked: false,
+    })
 
-    setLocked(newLocked)
-  }
+  if (error) {
 
-  function availableTeams(excluded: string[]) {
-    return teams.filter(
-      (team) =>
-        !excluded.includes(team.id.toString())
+    setMessage(
+      '❌ Error updating results'
     )
+
+    return
   }
 
-  return (
+  setLocked(false)
+
+  setMessage(
+    '✅ Results updated successfully'
+  )
+
+  loadData()
+  await loadLeaderboard()
+}
+
+async function lockResults() {
+
+  const { error } = await supabase
+    .from('game1_results')
+    .update({
+      locked: true
+    })
+    .eq('id', 1)
+
+  if (error) {
+
+    setMessage(
+      '❌ Error locking results'
+    )
+
+    return
+  }
+
+  setLocked(true)
+
+  setMessage(
+    '🔒 Results locked'
+  )
+  await loadLeaderboard()
+}
+
+
+					  function availableTeams(excluded: string[]) {
+						return teams.filter(
+						  (team) =>
+							!excluded.includes(team.id.toString())
+						)
+					  }
+
+
+async function loadLeaderboard() {
+
+  const { data: results } = await supabase
+    .from('game1_results')
+    .select('*')
+    .eq('id', 1)
+    .single()
+
+  if (!results) return
+
+  const { data: predictions } = await supabase
+    .from('game1predictions')
+    .select(`
+      *,
+      players (
+        id,
+        name
+      )
+    `)
+
+  if (!predictions) return
+
+  const rows = predictions.map((prediction: any) => {
+
+    let score = 0
+
+    if (
+      prediction.champion_team_id ===
+      results.champion_team_id
+    ) {
+      score += 20
+    }
+
+    if (
+      prediction.finalist_team_id ===
+      results.finalist_team_id
+    ) {
+      score += 10
+    }
+
+    const resultSemis = [
+      results.semifinalist1_team_id,
+      results.semifinalist2_team_id,
+    ]
+
+    const predictionSemis = [
+      prediction.semifinalist1_team_id,
+      prediction.semifinalist2_team_id,
+    ]
+
+    predictionSemis.forEach((semi: any) => {
+
+      if (resultSemis.includes(semi)) {
+        score += 5
+      }
+
+    })
+
+    if (
+      prediction.top_goal_player_id ===
+      results.top_goal_player_id
+    ) {
+      score += 10
+    }
+
+    if (
+      prediction.surprise_team_id ===
+      results.surprise_team_id
+    ) {
+      score += 10
+    }
+
+    return {
+      id: prediction.players.id,
+      name: prediction.players.name,
+      score,
+    }
+  })
+
+  rows.sort((a, b) => {
+
+    if (b.score !== a.score) {
+      return b.score - a.score
+    }
+
+    return a.id - b.id
+  })
+
+  setLeaderboard(rows)
+}
+
+
+return (
+
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
     <div className="glass-panel max-w-2xl">
 
       <div className="flex justify-between items-center mb-10">
@@ -137,16 +282,56 @@ export default function Game1Page() {
           🏆 Game 1 Results
         </h1>
 
-        <button
-          onClick={() => saveResults(!locked)}
-          className="btn-primary"
-        >
-          {locked ? '🔓 Unlock' : '🔒 Lock'}
-        </button>
+				<div className="flex gap-4 items-center">
+
+				  <button
+					disabled={locked}
+					onClick={updateResults}
+					className="btn-primary"
+				  >
+					Update Results
+				  </button>
+
+				  {!locked ? (
+
+					<button
+					  disabled={
+						!champion ||
+						!finalist ||
+						!semi1 ||
+						!semi2 ||
+						!topGoal ||
+						!surprise
+					  }
+					  onClick={lockResults}
+					  className="btn-primary"
+					>
+					  🔒 Lock
+					</button>
+
+				  ) : (
+
+					<div className="text-sm font-semibold">
+					  🔒 Locked
+					</div>
+
+				  )}
+
+				</div>
 
       </div>
 
       <div className="grid gap-4 max-w-md">
+
+
+				{message && (
+
+				  <div className="text-sm font-semibold mb-2">
+					{message}
+				  </div>
+
+				)}
+
 
         <div>
           <label className="block mb-1 text-sm font-semibold">
@@ -280,8 +465,8 @@ export default function Game1Page() {
                 value={player.id}
               >
 				{player.name}
-				{player.teams?.[0]
-				  ? ` (${player.teams[0].name})`
+				{player.teams
+				  ? ` (${player.teams.name})`
 				  : ''}
               </option>
             ))}
@@ -319,5 +504,51 @@ export default function Game1Page() {
       </div>
 
     </div>
-  )
+
+    <div className="glass-panel h-fit">
+
+      <h2 className="text-3xl font-bold mb-6">
+        🏅 Game 1 Standings
+      </h2>
+
+      <table className="table-modern">
+
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {leaderboard.map((row, index) => (
+
+            <tr key={row.id}>
+
+              <td>
+                {index + 1}
+              </td>
+
+              <td>
+                {row.name}
+              </td>
+
+              <td className="font-bold">
+                {row.score}
+              </td>
+
+            </tr>
+
+          ))}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+)
 }
