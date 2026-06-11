@@ -16,6 +16,11 @@ export async function middleware(req: NextRequest) {
 	
 	
   const session = req.cookies.get('session')?.value
+  
+  console.log(
+  'ALL COOKIES:',
+  req.cookies.getAll()
+)
 
 console.log(
   'PATH:',
