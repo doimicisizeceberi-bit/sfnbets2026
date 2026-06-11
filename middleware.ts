@@ -49,7 +49,7 @@ console.log(
   try {
 
   const payload =
-    await jwtVerify(session, secret)
+    await jwtVerify(session!, secret)
 
   console.log(
     'JWT OK',
