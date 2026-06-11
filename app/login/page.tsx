@@ -8,26 +8,31 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault()
+					async function handleLogin(
+					  e: React.FormEvent
+					) {
+					  e.preventDefault()
 
-const res = await fetch('/api/login', {
-  method: 'POST',
-  credentials: 'same-origin',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ password }),
-})
+					  if (
+						password ===
+						process.env.NEXT_PUBLIC_SITE_PASSWORD
+					  ) {
 
-	if (res.ok) {
-	  window.location.href = '/home'
-	}
-	
-	else {
-      setError('Invalid password')
-    }
-  }
+						localStorage.setItem(
+						  'sfn-auth',
+						  'ok'
+						)
+
+						window.location.href =
+						  '/home'
+
+						return
+					  }
+
+					  setError(
+						'Invalid password'
+					  )
+					}
 
   return (
     <main className="min-h-screen flex items-center justify-center">
