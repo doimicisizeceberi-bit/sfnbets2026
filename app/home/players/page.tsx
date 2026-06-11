@@ -206,19 +206,6 @@ export default function PlayersPage() {
 
 					  setExpandedGame2PlayerId(playerId)
 
-								if (
-								  expandedGame2PlayerId ===
-								  player.id
-								) {
-
-								  setExpandedGame2PlayerId(null)
-								  setGame2Message('')
-
-								} else {
-
-								  openGame2(player.id)
-
-								}
 
 					  const { data } = await supabase
 						.from('game2predictions')
