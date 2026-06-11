@@ -23,12 +23,13 @@ export async function POST(req: Request) {
 
   const cookieStore = await cookies()
 
-  cookieStore.set('session', token, {
-    httpOnly: true,
-    secure: true,
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
+	cookieStore.set('session', token, {
+	  httpOnly: true,
+	  secure: true,
+	  sameSite: 'lax',
+	  path: '/',
+	  maxAge: 60 * 60 * 24 * 7,
+	})
 
   return Response.json({
     success: true,

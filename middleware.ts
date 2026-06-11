@@ -8,6 +8,14 @@ const secret = new TextEncoder().encode(
 export async function middleware(req: NextRequest) {
   const session = req.cookies.get('session')?.value
 
+console.log(
+  'PATH:',
+  req.nextUrl.pathname,
+  'SESSION:',
+  !!session
+)
+
+
   const isLoginPage =
     req.nextUrl.pathname === '/login'
 
