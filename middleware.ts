@@ -8,7 +8,7 @@ const secret = new TextEncoder().encode(
 
 export async function middleware(req: NextRequest) {
 	
-	throw new Error('MIDDLEWARE TEST 999')
+
 	
 	
 	console.log(
@@ -78,5 +78,5 @@ console.log(
 }
 
 export const config = {
-  matcher: ['/home/:path*'],
+  matcher: ['/home', '/home/:path*'],
 }
