@@ -36,15 +36,17 @@ response.cookies.set(
   'session',
   token,
   {
-    httpOnly: true,
+    httpOnly: false,
     secure: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
   }
 )
 
-console.log('SETTING SESSION COOKIE')
+console.log(
+  'SETTING COOKIE',
+  token.length
+)
 
 return response
 
