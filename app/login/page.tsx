@@ -19,10 +19,11 @@ export default function LoginPage() {
       body: JSON.stringify({ password }),
     })
 
-    if (res.ok) {
-      router.push('/home')
-      router.refresh()
-    } else {
+	if (res.ok) {
+	  window.location.href = '/home'
+	}
+	
+	else {
       setError('Invalid password')
     }
   }
