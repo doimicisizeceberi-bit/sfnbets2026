@@ -1,3 +1,4 @@
+
 import { jwtVerify } from 'jose'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -6,6 +7,14 @@ const secret = new TextEncoder().encode(
 )
 
 export async function middleware(req: NextRequest) {
+	
+	console.log(
+  'SESSION_SECRET EXISTS:',
+  !!process.env.SESSION_SECRET
+)
+
+	
+	
   const session = req.cookies.get('session')?.value
 
 console.log(
