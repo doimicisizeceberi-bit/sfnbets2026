@@ -30,20 +30,34 @@ console.log(
   }
 
   try {
+
+  const payload =
     await jwtVerify(session, secret)
 
-    if (isLoginPage) {
-      return NextResponse.redirect(
-        new URL('/home', req.url)
-      )
-    }
+  console.log(
+    'JWT OK',
+    payload.payload
+  )
 
-    return NextResponse.next()
-  } catch {
+  if (isLoginPage) {
     return NextResponse.redirect(
-      new URL('/login', req.url)
+      new URL('/home', req.url)
     )
   }
+
+  return NextResponse.next()
+
+} catch (err) {
+
+  console.log(
+    'JWT ERROR',
+    err
+  )
+
+  return NextResponse.redirect(
+    new URL('/login', req.url)
+  )
+}
 }
 
 export const config = {
