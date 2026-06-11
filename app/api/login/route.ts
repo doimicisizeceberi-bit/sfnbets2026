@@ -32,17 +32,13 @@ export async function POST(req: Request) {
       success: true,
     })
 
-  response.cookies.set(
-    'session',
-    token,
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    }
-  )
+response.cookies.set(
+  'session',
+  token,
+  {
+    path: '/',
+  }
+)
 
   return response
 }
