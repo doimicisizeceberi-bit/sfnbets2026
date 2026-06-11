@@ -34,27 +34,17 @@ const response =
 
 response.cookies.set(
   'session',
-  'test123',
-  {
-    path: '/',
-  }
-)
-
-response.cookies.set(
-  'session_jwt_test',
   token,
   {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
     path: '/',
+    maxAge: 60 * 60 * 24 * 7,
   }
 )
 
-response.cookies.set(
-  'session_test',
-  'ok',
-  {
-    path: '/',
-  }
-)
+
 
 return response
 
