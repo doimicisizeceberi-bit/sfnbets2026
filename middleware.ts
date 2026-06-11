@@ -8,6 +8,9 @@ const secret = new TextEncoder().encode(
 
 export async function middleware(req: NextRequest) {
 	
+	throw new Error('MIDDLEWARE TEST 999')
+	
+	
 	console.log(
   'SESSION_SECRET EXISTS:',
   !!process.env.SESSION_SECRET
