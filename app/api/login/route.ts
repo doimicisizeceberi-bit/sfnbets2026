@@ -34,6 +34,14 @@ const response =
 
 response.cookies.set(
   'session',
+  'test123',
+  {
+    path: '/',
+  }
+)
+
+response.cookies.set(
+  'session_jwt_test',
   token,
   {
     path: '/',
