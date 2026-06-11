@@ -49,12 +49,19 @@ export default function Navbar() {
 		>
 		  Admin
 		</Link>	
-		<Link
-		  href="/logout"
-          className="hover:opacity-70"
-		>
-		  Logout
-		</Link>
+				<button
+				  onClick={() => {
+					localStorage.removeItem(
+					  'sfn-auth'
+					)
+
+					window.location.href =
+					  '/login'
+				  }}
+				  className="hover:opacity-70"
+				>
+				  Logout
+				</button>
 
       </div>
     </nav>
