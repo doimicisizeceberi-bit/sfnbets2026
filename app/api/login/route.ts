@@ -44,9 +44,8 @@ response.cookies.set(
   }
 )
 
-
+console.log('SETTING SESSION COOKIE')
 
 return response
 
-  return response
 }
