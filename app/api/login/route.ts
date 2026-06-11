@@ -27,10 +27,10 @@ export async function POST(req: Request) {
     .setExpirationTime('7d')
     .sign(secret)
 
-  const response =
-    NextResponse.json({
-      success: true,
-    })
+const response =
+  NextResponse.json({
+    success: true,
+  })
 
 response.cookies.set(
   'session',
@@ -39,6 +39,16 @@ response.cookies.set(
     path: '/',
   }
 )
+
+response.cookies.set(
+  'session_test',
+  'ok',
+  {
+    path: '/',
+  }
+)
+
+return response
 
   return response
 }
