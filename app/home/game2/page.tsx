@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type Team = {
@@ -30,6 +30,18 @@ type Match = {
   }
 }
 
+type PredictionRow = {
+  playerId: number
+  playerName: string
+
+  team1_goals: number | null
+  team2_goals: number | null
+
+  points_gained: number
+}
+
+
+
 function getMatchResult(
   score1: number,
   score2: number
@@ -58,7 +70,14 @@ export default function Game2Page() {
 	const [leaderboard, setLeaderboard] =
 	  useState<any[]>([])
 
+				const [expandedMatchId, setExpandedMatchId] =
+				  useState<number | null>(null)
 
+				const [activePlayers, setActivePlayers] =
+				  useState<any[]>([])
+
+				const [predictionsByMatch, setPredictionsByMatch] =
+				  useState<Record<number, PredictionRow[]>>({})
 
 
 
@@ -72,6 +91,62 @@ export default function Game2Page() {
       .from('teams')
       .select('*')
       .order('name')
+	  
+			const { data: playersData } = await supabase
+			  .from('players')
+			  .select('*')
+			  .eq('active', true)
+			  .order('name')
+
+			if (playersData) {
+			  setActivePlayers(playersData)
+			}	  
+	  
+			const { data: predictionsData } =
+			  await supabase
+				.from('game2predictions')
+				.select(`
+				  *,
+				  players (
+					id,
+					name
+				  )
+				`)	  
+
+				if (predictionsData) {
+
+				  const grouped:
+					Record<number, PredictionRow[]> = {}
+
+				  predictionsData.forEach((row: any) => {
+
+					if (!grouped[row.match_id]) {
+					  grouped[row.match_id] = []
+					}
+
+					grouped[row.match_id].push({
+
+					  playerId:
+						row.players.id,
+
+					  playerName:
+						row.players.name,
+
+					  team1_goals:
+						row.team1_goals,
+
+					  team2_goals:
+						row.team2_goals,
+
+					  points_gained:
+						row.points_gained || 0
+					})
+				  })
+
+				  setPredictionsByMatch(grouped)
+				}
+
+
 
     if (teamsData) {
       setTeams(teamsData)
@@ -192,6 +267,73 @@ export default function Game2Page() {
 
     loadData()
   }
+
+
+function toggleMatch(
+  matchId: number
+) {
+
+  setExpandedMatchId((prev) =>
+
+    prev === matchId
+      ? null
+      : matchId
+  )
+}
+
+
+function predictionCount(
+  matchId: number
+) {
+
+  return (
+    predictionsByMatch[
+      matchId
+    ]?.length || 0
+  )
+}
+
+function getMatchRows(
+  matchId: number
+) {
+
+  const predictions =
+    predictionsByMatch[
+      matchId
+    ] || []
+
+  const predictionMap =
+    new Map()
+
+  predictions.forEach((p) => {
+
+    predictionMap.set(
+      p.playerId,
+      p
+    )
+  })
+
+  const rows =
+    activePlayers.map(
+      (player) => ({
+
+        playerId:
+          player.id,
+
+        playerName:
+          player.name,
+
+        prediction:
+          predictionMap.get(
+            player.id
+          )
+      })
+    )
+
+  return rows
+}
+
+
 
 
 					async function calculateMatchPoints(
@@ -396,6 +538,61 @@ export default function Game2Page() {
         <div className="flex flex-col gap-6">
 
   {matches.map((match) => (
+	
+	<Fragment key={match.id}>
+
+										<div
+										  className="
+											flex
+											justify-between
+											items-center
+											cursor-pointer
+											mb-4
+										  "
+										  onClick={() =>
+											toggleMatch(match.id)
+										  }
+										>
+
+														<div
+														  className="
+															text-lg
+															font-bold
+														  "
+														>
+
+														  {expandedMatchId === match.id
+															? '▼'
+															: '▶'}
+
+														  {' '}
+
+														  {match.locked && '🔒 '}
+
+														  {match.team1?.name}
+
+														  {' '}
+
+														  {match.team1_goals !== null &&
+														   match.team2_goals !== null
+															? `${match.team1_goals}-${match.team2_goals}`
+															: '-'}
+
+														  {' '}
+
+														  {match.team2?.name}
+
+														  {' '}
+
+														  ({predictionCount(match.id)}/{activePlayers.length})
+
+														</div>
+
+										</div>
+
+
+
+
 
     <div
       key={match.id}
@@ -616,7 +813,132 @@ export default function Game2Page() {
 
       </div>
 
+      {expandedMatchId === match.id && (
+
+        <div
+          className="
+            mt-4
+            border-t
+            border-white/10
+            pt-4
+          "
+        >
+
+          <table
+            className="
+              w-full
+              text-sm
+            "
+          >
+
+            <thead>
+
+              <tr>
+
+                <th className="text-left">
+                  
+                </th>
+
+                <th className="text-left">
+                  
+                </th>
+
+                {match.locked && (
+
+                  <th className="text-left">
+                    
+                  </th>
+
+                )}
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {getMatchRows(
+                match.id
+              ).map((row) => {
+
+                const p =
+                  row.prediction
+
+                return (
+
+					<tr
+					  key={
+						row.playerId
+					  }
+					  className="
+						border-b
+						border-white/10
+					  "
+					>
+
+					<td
+					  className="
+						py-3
+						font-medium
+					  "
+					>
+					  {
+						row.playerName
+					  }
+					</td>
+
+						<td>
+
+						  <span
+							className="
+							  inline-block
+							  px-3
+							  py-1
+							  rounded-lg
+							  bg-white/8
+							  font-bold
+							  text-lg
+							  min-w-[60px]
+							  text-center
+							"
+						  >
+
+							{p
+							  ? `${p.team1_goals}-${p.team2_goals}`
+							  : '❗'}
+
+						  </span>
+
+						</td>
+
+                    {match.locked && (
+
+                      <td>
+
+                        {p
+                          ? p.points_gained
+                          : 0}
+
+                      </td>
+
+                    )}
+
+                  </tr>
+
+                )
+              })}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      )}
+
     </div>
+
+	</Fragment>
 
   ))}
 
