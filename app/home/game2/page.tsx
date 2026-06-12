@@ -826,7 +826,7 @@ function getMatchRows(
 
           <table
             className="
-              w-full
+				mx-auto
               text-sm
             "
           >
@@ -876,16 +876,16 @@ function getMatchRows(
 					  "
 					>
 
-					<td
-					  className="
-						py-3
-						font-medium
-					  "
-					>
-					  {
-						row.playerName
-					  }
-					</td>
+<td
+  className="
+    text-right
+    text-medium
+	font-bold
+	pr-6
+  "
+>
+  {row.playerName}
+</td>
 
 						<td>
 
@@ -913,13 +913,50 @@ function getMatchRows(
 
                     {match.locked && (
 
-                      <td>
+<td
+  className="
+    text-left
+    pl-3
+  "
+>
 
-                        {p
-                          ? p.points_gained
-                          : 0}
+  {p?.points_gained === 5 && (
 
-                      </td>
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-yellow-500
+        text-black
+      "
+    >
+      5
+    </span>
+
+  )}
+
+  {p?.points_gained === 2 && (
+
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-gray-300
+        text-black
+      "
+    >
+      2
+    </span>
+
+  )}
+
+</td>
 
                     )}
 
@@ -969,9 +1006,17 @@ function getMatchRows(
 
 					  <tr key={row.id}>
 
-						<td>
-						  {index + 1}
-						</td>
+<td>
+
+  {index === 0 ||
+
+   leaderboard[index - 1].points !==
+   row.points
+
+    ? index + 1
+    : ''}
+
+</td>
 
 						<td>
 						  {row.name}
