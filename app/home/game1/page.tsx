@@ -525,9 +525,17 @@ return (
 
             <tr key={row.id}>
 
-              <td>
-                {index + 1}
-              </td>
+<td>
+
+  {index === 0 ||
+
+   leaderboard[index - 1].score !==
+   row.score
+
+    ? index + 1
+    : ''}
+
+</td>
 
               <td>
                 {row.name}
