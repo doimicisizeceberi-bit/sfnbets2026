@@ -48,6 +48,11 @@ export default function PlayersPage() {
 		const [game2Message, setGame2Message] =
 		  useState('')
 
+		const [
+		  pendingLockPredictionId,
+		  setPendingLockPredictionId
+		] = useState<number | null>(null)
+
 
 
   async function loadPlayers() {
@@ -257,6 +262,18 @@ export default function PlayersPage() {
 					  team2Goals: number | null
 					) {
 
+					  if (
+						!isValidPredictionScore(team1Goals) ||
+						!isValidPredictionScore(team2Goals)
+					  ) {
+
+						setGame2Message(
+						  'Scores must be whole numbers from 0 to 10.'
+						)
+
+						return
+					  }
+
 					  const { error } = await supabase
 						.from('game2predictions')
 						.update({
@@ -291,6 +308,31 @@ export default function PlayersPage() {
 											  predictionId: number
 											) {
 
+											  const prediction =
+												game2Predictions.find(
+												  (item) =>
+													item.id === predictionId
+												)
+
+											  if (
+												!prediction ||
+												!isValidPredictionScore(
+												  prediction.team1_goals
+												) ||
+												!isValidPredictionScore(
+												  prediction.team2_goals
+												)
+											  ) {
+
+												setGame2Message(
+												  'Scores must be whole numbers from 0 to 10.'
+												)
+
+												setPendingLockPredictionId(null)
+
+												return
+											  }
+
 											  const { error } = await supabase
 												.from('game2predictions')
 												.update({
@@ -310,6 +352,8 @@ export default function PlayersPage() {
 											  setGame2Message(
 												`🔒 Prediction locked (#${predictionId})`
 											  )
+
+											  setPendingLockPredictionId(null)
 
 											  if (expandedGame2PlayerId) {
 												await openGame2(
@@ -417,6 +461,43 @@ export default function PlayersPage() {
 				  !excluded.includes(team.id.toString())
 			  )
 			}
+
+			function isValidPredictionScore(
+			  score: number | null
+			) {
+
+			  return (
+				score !== null &&
+				Number.isInteger(score) &&
+				score >= 0 &&
+				score <= 10
+			  )
+			}
+
+			function hasInvalidPredictionScore(
+			  score: number | null
+			) {
+
+			  return (
+				!isValidPredictionScore(score)
+			  )
+			}
+
+			const pendingLockPrediction =
+			  pendingLockPredictionId
+				? game2Predictions.find(
+					(prediction) =>
+					  prediction.id === pendingLockPredictionId
+				  )
+				: null
+
+			const pendingLockMatch =
+			  pendingLockPrediction
+				? game2Matches.find(
+					(match) =>
+					  match.id === pendingLockPrediction.match_id
+				  )
+				: null
 
 
  return (
@@ -876,6 +957,20 @@ export default function PlayersPage() {
                   key={prediction.id}
                   className="bg-white/5 rounded-xl p-4 border border-white/10"
                 >
+				  {(
+					hasInvalidPredictionScore(
+					  prediction.team1_goals
+					) ||
+					hasInvalidPredictionScore(
+					  prediction.team2_goals
+					)
+				  ) && (
+
+					<div className="text-sm font-semibold text-red-300 mb-3">
+					  Scores must be whole numbers from 0 to 10.
+					</div>
+
+				  )}
 
                   <div className="flex items-center gap-4 text-sm text-white/70 mb-3">
 
@@ -909,6 +1004,9 @@ export default function PlayersPage() {
 
                     <input
                       type="number"
+					  min={0}
+					  max={10}
+					  step={1}
 
                       disabled={
                         prediction.locked
@@ -939,6 +1037,9 @@ export default function PlayersPage() {
 
                     <input
                       type="number"
+					  min={0}
+					  max={10}
+					  step={1}
 
                       disabled={
                         prediction.locked
@@ -974,6 +1075,14 @@ export default function PlayersPage() {
                         <div className="flex gap-2">
 
                           <button
+							disabled={
+							  !isValidPredictionScore(
+								prediction.team1_goals
+							  ) ||
+							  !isValidPredictionScore(
+								prediction.team2_goals
+							  )
+							}
                             onClick={() =>
                               updateGame2Prediction(
                                 prediction.id,
@@ -988,11 +1097,15 @@ export default function PlayersPage() {
 
                           <button
                             disabled={
-                              prediction.team1_goals === null ||
-                              prediction.team2_goals === null
+							  !isValidPredictionScore(
+								prediction.team1_goals
+							  ) ||
+							  !isValidPredictionScore(
+								prediction.team2_goals
+							  )
                             }
                             onClick={() =>
-                              lockGame2Prediction(
+                              setPendingLockPredictionId(
                                 prediction.id
                               )
                             }
@@ -1041,6 +1154,56 @@ export default function PlayersPage() {
       </table>
 
     </div>
+
+	{pendingLockPrediction && pendingLockMatch && (
+
+	  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+
+		<div className="glass-panel w-full max-w-md">
+
+		  <h2 className="text-2xl font-bold mb-4">
+			Confirm?
+		  </h2>
+
+		  <div className="text-xl font-semibold mb-8">
+			{pendingLockMatch.team1?.name}
+			-
+			{pendingLockMatch.team2?.name}
+			{' '}
+			{pendingLockPrediction.team1_goals}
+			-
+			{pendingLockPrediction.team2_goals}
+		  </div>
+
+		  <div className="flex justify-end gap-3">
+
+			<button
+			  onClick={() =>
+				lockGame2Prediction(
+				  pendingLockPrediction.id
+				)
+			  }
+			  className="btn-primary"
+			>
+			  Yes
+			</button>
+
+			<button
+			  onClick={() =>
+				setPendingLockPredictionId(null)
+			  }
+			  className="btn-primary"
+			>
+			  No
+			</button>
+
+		  </div>
+
+		</div>
+
+	  </div>
+
+	)}
   </>
 )
 }
