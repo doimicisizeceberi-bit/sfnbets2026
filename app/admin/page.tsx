@@ -20,6 +20,12 @@ export default function AdminPage() {
 	  setGame2MatchId
 	] = useState('')	
 	
+	const [
+	  game2VisibilityMatchId,
+	  setGame2VisibilityMatchId
+	] = useState('')	
+		
+	
 	
   async function unlockGame1Results() {
 
@@ -169,9 +175,68 @@ async function unlockGame2Match() {
 
   setGame2MatchId('')
 }
+async function toggleGame2MatchVisibility() {
 
+  if (!game2VisibilityMatchId) {
 
+    setMessage(
+      '❌ Enter match ID'
+    )
 
+    return
+  }
+
+  const numericMatchId =
+    Number(game2VisibilityMatchId)
+
+  const {
+    data: match,
+    error: fetchError
+  } = await supabase
+    .from('game2matches')
+    .select('visible')
+    .eq('id', numericMatchId)
+    .single()
+
+  if (fetchError || !match) {
+
+    setMessage(
+      '❌ Match not found'
+    )
+
+    return
+  }
+
+  const { error } =
+    await supabase
+      .from('game2matches')
+      .update({
+        visible: !match.visible
+      })
+      .eq(
+        'id',
+        numericMatchId
+      )
+
+  if (error) {
+
+    setMessage(
+      '❌ Error updating visibility'
+    )
+
+    return
+  }
+
+  setMessage(
+    `👁️ Match #${numericMatchId} visibility changed to ${
+      !match.visible
+        ? 'VISIBLE'
+        : 'HIDDEN'
+    }`
+  )
+
+  setGame2VisibilityMatchId('')
+}
   return (
 
     <div className="glass-panel max-w-3xl">
@@ -375,6 +440,57 @@ async function unlockGame2Match() {
 
 								</div>	  
 									  
+	  
+<div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+
+  <div className="flex justify-between items-center gap-6">
+
+    <div>
+
+      <h2 className="text-2xl font-bold mb-2">
+        👁️ Game 2 Visibility
+      </h2>
+
+      <div className="text-white/70">
+        Toggle match visibility
+      </div>
+
+    </div>
+
+    <div className="flex items-center gap-3">
+
+      <input
+        type="number"
+        placeholder="Match ID"
+        value={game2VisibilityMatchId}
+        onChange={(e) =>
+          setGame2VisibilityMatchId(
+            e.target.value
+          )
+        }
+        className="input-modern w-40"
+      />
+
+      <button
+        onClick={
+          toggleGame2MatchVisibility
+        }
+        className="btn-primary"
+      >
+        👁️ Toggle
+      </button>
+
+    </div>
+
+  </div>
+
+</div>	  
+	  
+	  
+	  
+	  
+	  
+	  
 	  
 
     </div>

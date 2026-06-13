@@ -13,6 +13,9 @@ type Match = {
 
   match_date: string
 	match_time: string | null
+	
+	  visible: boolean
+	
   team1_id: number
   team2_id: number
 
@@ -180,18 +183,19 @@ export default function Game2Page() {
       setTeams(teamsData)
     }
 
-    const { data: matchesData } = await supabase
-      .from('game2matches')
-      .select(`
-        *,
-        team1:team1_id (
-          name
-        ),
-        team2:team2_id (
-          name
-        )
-      `)
-		.order('id', { ascending: false })
+				const { data: matchesData } = await supabase
+				  .from('game2matches')
+				  .select(`
+					*,
+					team1:team1_id (
+					  name
+					),
+					team2:team2_id (
+					  name
+					)
+				  `)
+
+				  .order('id', { ascending: false })
 
     if (matchesData) {
       setMatches(matchesData)
@@ -203,17 +207,19 @@ export default function Game2Page() {
 
     const { error } = await supabase
       .from('game2matches')
-      .insert({
-        match_date: new Date()
-          .toISOString()
-          .split('T')[0],
-		  match_time: '18:00',
+				.insert({
+				  match_date: new Date()
+					.toISOString()
+					.split('T')[0],
 
-        team1_id: teams[0]?.id,
-        team2_id: teams[1]?.id,
+				  match_time: '18:00',
 
-        locked: false
-      })
+				  team1_id: teams[0]?.id,
+				  team2_id: teams[1]?.id,
+
+				  locked: false,
+				  visible: false
+				})
 
     if (error) {
 
@@ -606,15 +612,19 @@ function canRevealPrediction(
 														  "
 														>
 
-														  {expandedMatchId === match.id
-															? '▼'
-															: '▶'}
+																{expandedMatchId === match.id
+																  ? '▼'
+																  : '▶'}
 
-														  {' '}
+																{' '}
 
-														  {match.locked && '🔒 '}
+																#{match.id}
 
-														  {match.team1?.name}
+																{' '}
+
+																{match.locked && '🔒 '}
+
+																{match.team1?.name}
 
 														  {' '}
 
@@ -634,6 +644,16 @@ function canRevealPrediction(
 														</div>
 
 										</div>
+
+
+
+
+{match.visible && (
+
+
+
+
+
 
 
 
@@ -858,6 +878,18 @@ function canRevealPrediction(
 
       </div>
 
+      </div>
+
+)}
+
+
+
+
+
+
+
+
+
       {expandedMatchId === match.id && (
 
         <div
@@ -1026,7 +1058,7 @@ function canRevealPrediction(
 
       )}
 
-    </div>
+
 
 	</Fragment>
 
