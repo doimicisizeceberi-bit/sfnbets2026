@@ -538,114 +538,153 @@ export default function PlayersPage() {
 			  )
 			}
 
-/* MOBILE RETURN BLOCK TEMPLATE
-Replace your existing return(...) block with this one.
-All handlers/state names are preserved.
-*/
 
-return (
-<>
-  <div className="glass-panel">
-    <div className="flex flex-col gap-4 mb-6">
-      <h1 className="text-3xl font-bold">👥 Players</h1>
+ return (
+  <>
+    <div className="glass-panel">
 
-      <input
-        type="text"
-        placeholder="Player name"
-        value={newPlayer}
-        onChange={(e) => setNewPlayer(e.target.value)}
-        className="input-modern"
-      />
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold">
+          👥 Players
+        </h1>
 
-      <button
-        onClick={addPlayer}
-        className="btn-primary w-full"
-      >
-        + Add Player
-      </button>
-    </div>
+        <button
+          onClick={addPlayer}
+          className="btn-primary"
+        >
+          + Add Player
+        </button>
+      </div>
 
-    <div className="flex flex-col gap-4">
-      {players.map((player) => (
-        <React.Fragment key={player.id}>
-          <div className="glass-panel flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="text-sm opacity-70">
-                  Player #{player.id}
-                </div>
+      <div className="mb-6 max-w-sm">
+        <input
+          type="text"
+          placeholder="Player name"
+          value={newPlayer}
+          onChange={(e) =>
+            setNewPlayer(e.target.value)
+          }
+          className="input-modern"
+        />
+      </div>
 
-                <div className="text-xl font-bold">
-                  {player.name}
-                </div>
-              </div>
+      <table className="table-modern">
 
-              <button
-                onClick={() =>
-                  togglePlayer(
-                    player.id,
-                    player.active
-                  )
-                }
-                className={
-                  player.active
-                    ? 'status-active'
-                    : 'status-inactive'
-                }
-              >
-                {player.active
-                  ? 'ACTIVE'
-                  : 'INACTIVE'}
-              </button>
-            </div>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Game 1</th>
+            <th>Game 2</th>
+          </tr>
+        </thead>
 
-            {player.active && (
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    if (expandedPlayerId === player.id) {
-                      setExpandedPlayerId(null)
-                      setMessage('')
-                    } else {
-                      setMessage('')
-                      openGame1(player.id)
+        <tbody>
+
+          {players.map((player) => (
+            <React.Fragment key={player.id}>
+              <tr key={player.id}>
+
+                <td>{player.id}</td>
+
+                <td>{player.name}</td>
+
+                <td>
+                  <button
+                    onClick={() =>
+                      togglePlayer(
+                        player.id,
+                        player.active
+                      )
                     }
-                  }}
-                  className="btn-primary"
-                >
-                  {expandedPlayerId === player.id
-                    ? '▲ Game 1'
-                    : '▼ Game 1'}
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (
-                      expandedGame2PlayerId ===
-                      player.id
-                    ) {
-                      setExpandedGame2PlayerId(null)
-                      setGame2Message('')
-                    } else {
-                      openGame2(player.id)
+                    className={
+                      player.active
+                        ? 'status-active'
+                        : 'status-inactive'
                     }
-                  }}
-                  className="btn-primary"
-                >
-                  {expandedGame2PlayerId === player.id
-                    ? '▲ Game 2'
-                    : '▼ Game 2'}
-                </button>
-              </div>
-            )}
+                  >
+                    {player.active
+                      ? 'ACTIVE'
+                      : 'INACTIVE'}
+                  </button>
+                </td>
 
-            {/* KEEP YOUR EXISTING GAME 1 BLOCK HERE */}
-			
+                <td>
 
+                  {player.active ? (
 
-{expandedPlayerId === player.id && (
+                    <button
+							onClick={() => {
 
-<div className="pt-4 pb-8">
+								if (expandedPlayerId === player.id) {
+
+								  setExpandedPlayerId(null)
+								  setMessage('')
+
+								} else {
+
+								  setMessage('')
+								  openGame1(player.id)
+
+								}
+
+							}}
+                      className="btn-primary"
+                    >
+                      {expandedPlayerId === player.id
+                        ? '▲ Game 1'
+                        : '▼ Game 1'}
+                    </button>
+
+                  ) : (
+                    '🚫'
+                  )}
+
+                </td>
+
+						<td>
+
+						  {player.active ? (
+
+							<button
+							  onClick={() => {
+
+								if (
+								  expandedGame2PlayerId ===
+								  player.id
+								) {
+
+								  setExpandedGame2PlayerId(null)
+								  setGame2Message('')
+
+								} else {
+
+								  openGame2(player.id)
+
+								}
+
+							  }}
+							  className="btn-primary"
+							>
+							  {expandedGame2PlayerId === player.id
+								? '▲ Game 2'
+								: '▼ Game 2'}
+							</button>
+
+						  ) : (
+							'🚫'
+						  )}
+
+						</td>
+
+              </tr>
+
+              {expandedPlayerId === player.id && (
+
+                <tr>
+
+                  <td colSpan={5} className="pt-4 pb-8">
 
                     <div className="glass-panel max-w-2xl">
 
@@ -895,37 +934,18 @@ return (
 
                     </div>
 
-</div>
+                  </td>
+
+                </tr>
 
               )}
-			  
-			  
-			  
-			
-			
-			
-            {/* KEEP YOUR EXISTING GAME 2 BLOCK HERE */}
-			
-			
 
-
-
-
-
-
-			  
-			  
-			  
-			  
-			  
-			  
-			  
-			  
-			  
 
 {expandedGame2PlayerId === player.id && (
 
-<div className="pt-4 pb-8">
+  <tr>
+
+    <td colSpan={5} className="pt-4 pb-8">
 
       <div className="glass-panel">
 
@@ -1182,43 +1202,71 @@ return (
         </div>
 
       </div>
-</div>
+
+    </td>
+
+  </tr>
 
 )}
-			  
-			  
-			  
-			  
-			  
-			  
-			  			
-			
-			
-			
-          </div>
-        </React.Fragment>
-      ))}
+
+            </React.Fragment>
+          ))}
+
+        </tbody>
+
+      </table>
+
     </div>
-  </div>
-</>
+
+	{pendingLockPrediction && pendingLockMatch && (
+
+	  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+
+		<div className="glass-panel w-full max-w-md">
+
+		  <h2 className="text-2xl font-bold mb-4">
+			Confirm?
+		  </h2>
+
+		  <div className="text-xl font-semibold mb-8">
+			{pendingLockMatch.team1?.name}
+			-
+			{pendingLockMatch.team2?.name}
+			{' '}
+			{pendingLockPrediction.team1_goals}
+			-
+			{pendingLockPrediction.team2_goals}
+		  </div>
+
+		  <div className="flex justify-end gap-3">
+
+			<button
+			  onClick={() =>
+				lockGame2Prediction(
+				  pendingLockPrediction.id
+				)
+			  }
+			  className="btn-primary"
+			>
+			  Yes
+			</button>
+
+			<button
+			  onClick={() =>
+				setPendingLockPredictionId(null)
+			  }
+			  className="btn-primary"
+			>
+			  No
+			</button>
+
+		  </div>
+
+		</div>
+
+	  </div>
+
+	)}
+  </>
 )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			  
-			  

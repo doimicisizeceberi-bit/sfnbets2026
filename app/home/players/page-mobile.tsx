@@ -1,150 +1,651 @@
+'use client'
 
- return (
-  <>
-    <div className="glass-panel">
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import React from 'react'
 
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold">
-          👥 Players
-        </h1>
+type Player = {
+  id: number
+  name: string
+  active: boolean
+}
 
-        <button
-          onClick={addPlayer}
-          className="btn-primary"
-        >
-          + Add Player
-        </button>
-      </div>
+export default function PlayersPage() {
+  const [players, setPlayers] = useState<Player[]>([])
+  const [newPlayer, setNewPlayer] = useState('')
 
-      <div className="mb-6 max-w-sm">
-        <input
-          type="text"
-          placeholder="Player name"
-          value={newPlayer}
-          onChange={(e) =>
-            setNewPlayer(e.target.value)
-          }
-          className="input-modern"
-        />
-      </div>
 
-      <table className="table-modern">
+		const [expandedPlayerId, setExpandedPlayerId] =
+		  useState<number | null>(null)
 
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Game 1</th>
-            <th>Game 2</th>
-          </tr>
-        </thead>
+		const [predictionId, setPredictionId] =
+		  useState<number | null>(null)
 
-        <tbody>
+		const [predictionLocked, setPredictionLocked] =
+		  useState(false)
 
-          {players.map((player) => (
-            <React.Fragment key={player.id}>
-              <tr key={player.id}>
+		const [champion, setChampion] = useState('')
+		const [finalist, setFinalist] = useState('')
+		const [semi1, setSemi1] = useState('')
+		const [semi2, setSemi2] = useState('')
+		const [topGoal, setTopGoal] = useState('')
+		const [surprise, setSurprise] = useState('')
 
-                <td>{player.id}</td>
+		const [teams, setTeams] = useState<any[]>([])
+		const [goalPlayers, setGoalPlayers] = useState<any[]>([])
 
-                <td>{player.name}</td>
+		const [message, setMessage] = useState('')
 
-                <td>
-                  <button
-                    onClick={() =>
-                      togglePlayer(
-                        player.id,
-                        player.active
-                      )
-                    }
-                    className={
-                      player.active
-                        ? 'status-active'
-                        : 'status-inactive'
-                    }
-                  >
-                    {player.active
-                      ? 'ACTIVE'
-                      : 'INACTIVE'}
-                  </button>
-                </td>
+		const [expandedGame2PlayerId, setExpandedGame2PlayerId] =
+		  useState<number | null>(null)
 
-                <td>
+		const [game2Matches, setGame2Matches] =
+		  useState<any[]>([])
 
-                  {player.active ? (
+		const [game2Predictions, setGame2Predictions] =
+		  useState<any[]>([])
 
-                    <button
-							onClick={() => {
+		const [game2LockedCounts, setGame2LockedCounts] =
+		  useState<Record<number, number>>({})
 
-								if (expandedPlayerId === player.id) {
+		const [game2Message, setGame2Message] =
+		  useState('')
 
-								  setExpandedPlayerId(null)
-								  setMessage('')
+		const [
+		  pendingLockPredictionId,
+		  setPendingLockPredictionId
+		] = useState<number | null>(null)
 
-								} else {
 
-								  setMessage('')
-								  openGame1(player.id)
 
+  async function loadPlayers() {
+    const { data } = await supabase
+      .from('players')
+      .select('*')
+      .order('id')
+
+    if (data) {
+      setPlayers(data)
+    }
+  }
+
+  useEffect(() => {
+	loadPlayers()
+	loadGame1Data()
+	loadGame2Matches()
+  }, [])
+
+  async function addPlayer() {
+    if (!newPlayer.trim()) return
+
+    await supabase.from('players').insert({
+      name: newPlayer,
+      active: true,
+    })
+
+    setNewPlayer('')
+    loadPlayers()
+  }
+
+  async function togglePlayer(
+    id: number,
+    active: boolean
+  ) {
+    await supabase
+      .from('players')
+      .update({ active: !active })
+      .eq('id', id)
+
+    loadPlayers()
+  }
+
+		async function loadGame1Data() {
+
+		  const { data: teamsData } = await supabase
+			.from('teams')
+			.select('*')
+			.order('name')
+
+		  if (teamsData) {
+			setTeams(teamsData)
+		  }
+
+		  const { data: goalData } = await supabase
+			.from('top_goal')
+						.select(`
+						  id,
+						  name,
+						  teams:team_id (
+							name
+						  )
+						`)
+			.order('name')
+
+		  if (goalData) {
+			setGoalPlayers(goalData)
+		  }
+		}
+
+
+					async function loadGame2Matches() {
+
+					  const { data } = await supabase
+						.from('game2matches')
+						.select(`
+						  *,
+						  team1:team1_id (
+							name
+						  ),
+						  team2:team2_id (
+							name
+						  )
+						`)
+						.order('id', {
+						  ascending: false
+						})
+
+					  if (data) {
+						setGame2Matches(data)
+					  }
+
+					  await loadGame2LockedCounts()
+					}
+
+					async function loadGame2LockedCounts() {
+
+					  const { data } = await supabase
+						.from('game2predictions')
+						.select('match_id')
+						.eq('locked', true)
+
+					  if (!data) return
+
+					  const counts:
+						Record<number, number> = {}
+
+					  data.forEach((prediction: any) => {
+
+						counts[prediction.match_id] =
+						  (counts[prediction.match_id] || 0) + 1
+					  })
+
+					  setGame2LockedCounts(counts)
+					}
+
+
+
+
+							async function openGame1(playerId: number) {
+
+								setExpandedPlayerId(playerId)
+
+							  setExpandedPlayerId(playerId)
+
+							  const { data } = await supabase
+								.from('game1predictions')
+								.select('*')
+								.eq('player_id', playerId)
+								.single()
+
+							  if (data) {
+
+								setPredictionId(data.id)
+
+								setChampion(
+								  data.champion_team_id?.toString() || ''
+								)
+
+								setFinalist(
+								  data.finalist_team_id?.toString() || ''
+								)
+
+								setSemi1(
+								  data.semifinalist1_team_id?.toString() || ''
+								)
+
+								setSemi2(
+								  data.semifinalist2_team_id?.toString() || ''
+								)
+
+								setTopGoal(
+								  data.top_goal_player_id?.toString() || ''
+								)
+
+								setSurprise(
+								  data.surprise_team_id?.toString() || ''
+								)
+
+								setPredictionLocked(data.locked)
+
+							  } else {
+
+								setPredictionId(null)
+
+								setChampion('')
+								setFinalist('')
+								setSemi1('')
+								setSemi2('')
+								setTopGoal('')
+								setSurprise('')
+
+								setPredictionLocked(false)
+							  }
+							}
+
+
+					async function openGame2(playerId: number) {
+
+					  setExpandedGame2PlayerId(playerId)
+
+
+					  const { data } = await supabase
+						.from('game2predictions')
+						.select('*')
+						.eq('player_id', playerId)
+						.order('match_id', {
+						  ascending: false
+						})
+
+					  if (data) {
+						setGame2Predictions(data)
+					  }
+					}
+
+
+							async function loadGame2Predictions(
+							  playerId: number
+							) {
+
+							  for (const match of game2Matches) {
+
+								const exists =
+								  game2Predictions.find(
+									(prediction) =>
+									  prediction.match_id === match.id
+								  )
+
+								if (exists) continue
+
+								await supabase
+								  .from('game2predictions')
+								  .insert({
+									match_id: match.id,
+									player_id: playerId,
+									locked: false
+								  })
+							  }
+
+							  setGame2Message(
+								'✅ Matches loaded'
+							  )
+
+							  await openGame2(playerId)
+							}
+
+					async function updateGame2Prediction(
+					  predictionId: number,
+					  team1Goals: number | null,
+					  team2Goals: number | null
+					) {
+
+					  if (
+						!isValidPredictionScore(team1Goals) ||
+						!isValidPredictionScore(team2Goals)
+					  ) {
+
+						setGame2Message(
+						  'Scores must be whole numbers from 0 to 10.'
+						)
+
+						return
+					  }
+
+					  const { error } = await supabase
+						.from('game2predictions')
+						.update({
+						  team1_goals: team1Goals,
+						  team2_goals: team2Goals,
+						  locked: false
+						})
+						.eq('id', predictionId)
+
+					  if (error) {
+
+						setGame2Message(
+						  '❌ Error updating prediction'
+						)
+
+						return
+					  }
+
+					  setGame2Message(
+						`✅ Prediction updated (#${predictionId})`
+					  )
+
+					  if (expandedGame2PlayerId) {
+						await openGame2(
+						  expandedGame2PlayerId
+						)
+					  }
+					}
+
+
+											async function lockGame2Prediction(
+											  predictionId: number
+											) {
+
+											  const prediction =
+												game2Predictions.find(
+												  (item) =>
+													item.id === predictionId
+												)
+
+											  if (
+												!prediction ||
+												!isValidPredictionScore(
+												  prediction.team1_goals
+												) ||
+												!isValidPredictionScore(
+												  prediction.team2_goals
+												)
+											  ) {
+
+												setGame2Message(
+												  'Scores must be whole numbers from 0 to 10.'
+												)
+
+												setPendingLockPredictionId(null)
+
+												return
+											  }
+
+											  const { error } = await supabase
+												.from('game2predictions')
+												.update({
+												  locked: true
+												})
+												.eq('id', predictionId)
+
+											  if (error) {
+
+												setGame2Message(
+												  '❌ Error locking prediction'
+												)
+
+												return
+											  }
+
+											  setGame2Message(
+												`🔒 Prediction locked (#${predictionId})`
+											  )
+
+											  setPendingLockPredictionId(null)
+
+											  await loadGame2LockedCounts()
+
+											  if (expandedGame2PlayerId) {
+												await openGame2(
+												  expandedGame2PlayerId
+												)
+											  }
+											}
+
+						function updateLocalGame2Prediction(
+						  predictionId: number,
+						  field: string,
+						  value: any
+						) {
+
+						  setGame2Predictions((prev) =>
+							prev.map((prediction) => {
+
+							  if (
+								prediction.id !== predictionId
+							  ) {
+								return prediction
+							  }
+
+							  return {
+								...prediction,
+								[field]: value
+							  }
+							})
+						  )
+						}
+
+								async function updatePrediction() {
+
+								  if (!expandedPlayerId) return
+
+										const { error } = await supabase
+										  .from('game1predictions')
+										  .upsert({
+											player_id: expandedPlayerId,
+
+											champion_team_id: champion,
+											finalist_team_id: finalist,
+
+											semifinalist1_team_id: semi1,
+											semifinalist2_team_id: semi2,
+
+											top_goal_player_id: topGoal,
+
+											surprise_team_id: surprise,
+
+											locked: false,
+										  },
+										  {
+											onConflict: 'player_id'
+										  })
+
+								  if (error) {
+
+									setMessage(
+									  '❌ Error updating predictions'
+									)
+
+									return
+								  }
+
+								  setMessage(
+									'✅ Predictions updated successfully'
+								  )
+
+								  await openGame1(expandedPlayerId)
 								}
 
-							}}
-                      className="btn-primary"
-                    >
-                      {expandedPlayerId === player.id
-                        ? '▲ Game 1'
-                        : '▼ Game 1'}
-                    </button>
 
-                  ) : (
-                    '🚫'
-                  )}
+												async function lockPrediction() {
 
-                </td>
+												  if (!predictionId) return
 
-						<td>
+												  const { error } = await supabase
+													.from('game1predictions')
+													.update({
+													  locked: true
+													})
+													.eq('id', predictionId)
 
-						  {player.active ? (
+												  if (error) {
 
-							<button
-							  onClick={() => {
+													setMessage(
+													  '❌ Error locking prediction'
+													)
 
-								if (
-								  expandedGame2PlayerId ===
-								  player.id
-								) {
+													return
+												  }
 
-								  setExpandedGame2PlayerId(null)
-								  setGame2Message('')
+												  setPredictionLocked(true)
 
-								} else {
+												  setMessage(
+													`🔒 Prediction locked (#${predictionId})`
+												  )
+												}
 
-								  openGame2(player.id)
 
-								}
+			function availableTeams(excluded: string[]) {
+			  return teams.filter(
+				(team) =>
+				  !excluded.includes(team.id.toString())
+			  )
+			}
 
-							  }}
-							  className="btn-primary"
-							>
-							  {expandedGame2PlayerId === player.id
-								? '▲ Game 2'
-								: '▼ Game 2'}
-							</button>
+			function isValidPredictionScore(
+			  score: number | null
+			) {
 
-						  ) : (
-							'🚫'
-						  )}
+			  return (
+				score !== null &&
+				Number.isInteger(score) &&
+				score >= 0 &&
+				score <= 10
+			  )
+			}
 
-						</td>
+			function hasInvalidPredictionScore(
+			  score: number | null
+			) {
 
-              </tr>
+			  return (
+				!isValidPredictionScore(score)
+			  )
+			}
 
-              {expandedPlayerId === player.id && (
+			const pendingLockPrediction =
+			  pendingLockPredictionId
+				? game2Predictions.find(
+					(prediction) =>
+					  prediction.id === pendingLockPredictionId
+				  )
+				: null
 
-                <tr>
+			const pendingLockMatch =
+			  pendingLockPrediction
+				? game2Matches.find(
+					(match) =>
+					  match.id === pendingLockPrediction.match_id
+				  )
+				: null
 
-                  <td colSpan={5} className="pt-4 pb-8">
+			function canRevealGame2Prediction(match: any) {
+
+			  return (
+				match.locked ||
+				(
+				  players.length > 0 &&
+				  (game2LockedCounts[match.id] || 0) >= players.length
+				)
+			  )
+			}
+
+/* MOBILE RETURN BLOCK TEMPLATE
+Replace your existing return(...) block with this one.
+All handlers/state names are preserved.
+*/
+
+return (
+<>
+  <div className="glass-panel">
+    <div className="flex flex-col gap-4 mb-6">
+      <h1 className="text-3xl font-bold">👥 Players</h1>
+
+      <input
+        type="text"
+        placeholder="Player name"
+        value={newPlayer}
+        onChange={(e) => setNewPlayer(e.target.value)}
+        className="input-modern"
+      />
+
+      <button
+        onClick={addPlayer}
+        className="btn-primary w-full"
+      >
+        + Add Player
+      </button>
+    </div>
+
+    <div className="flex flex-col gap-4">
+      {players.map((player) => (
+        <React.Fragment key={player.id}>
+          <div className="glass-panel flex flex-col gap-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="text-sm opacity-70">
+                  Player #{player.id}
+                </div>
+
+                <div className="text-xl font-bold">
+                  {player.name}
+                </div>
+              </div>
+
+              <button
+                onClick={() =>
+                  togglePlayer(
+                    player.id,
+                    player.active
+                  )
+                }
+                className={
+                  player.active
+                    ? 'status-active'
+                    : 'status-inactive'
+                }
+              >
+                {player.active
+                  ? 'ACTIVE'
+                  : 'INACTIVE'}
+              </button>
+            </div>
+
+            {player.active && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    if (expandedPlayerId === player.id) {
+                      setExpandedPlayerId(null)
+                      setMessage('')
+                    } else {
+                      setMessage('')
+                      openGame1(player.id)
+                    }
+                  }}
+                  className="btn-primary"
+                >
+                  {expandedPlayerId === player.id
+                    ? '▲ Game 1'
+                    : '▼ Game 1'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (
+                      expandedGame2PlayerId ===
+                      player.id
+                    ) {
+                      setExpandedGame2PlayerId(null)
+                      setGame2Message('')
+                    } else {
+                      openGame2(player.id)
+                    }
+                  }}
+                  className="btn-primary"
+                >
+                  {expandedGame2PlayerId === player.id
+                    ? '▲ Game 2'
+                    : '▼ Game 2'}
+                </button>
+              </div>
+            )}
+
+            {/* KEEP YOUR EXISTING GAME 1 BLOCK HERE */}
+			
+
+
+{expandedPlayerId === player.id && (
+
+<div className="pt-4 pb-8">
 
                     <div className="glass-panel max-w-2xl">
 
@@ -394,18 +895,37 @@
 
                     </div>
 
-                  </td>
-
-                </tr>
+</div>
 
               )}
+			  
+			  
+			  
+			
+			
+			
+            {/* KEEP YOUR EXISTING GAME 2 BLOCK HERE */}
+			
+			
 
+
+
+
+
+
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+			  
 
 {expandedGame2PlayerId === player.id && (
 
-  <tr>
-
-    <td colSpan={5} className="pt-4 pb-8">
+<div className="pt-4 pb-8">
 
       <div className="glass-panel">
 
@@ -662,71 +1182,43 @@
         </div>
 
       </div>
-
-    </td>
-
-  </tr>
+</div>
 
 )}
-
-            </React.Fragment>
-          ))}
-
-        </tbody>
-
-      </table>
-
+			  
+			  
+			  
+			  
+			  
+			  
+			  			
+			
+			
+			
+          </div>
+        </React.Fragment>
+      ))}
     </div>
-
-	{pendingLockPrediction && pendingLockMatch && (
-
-	  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-
-		<div className="glass-panel w-full max-w-md">
-
-		  <h2 className="text-2xl font-bold mb-4">
-			Confirm?
-		  </h2>
-
-		  <div className="text-xl font-semibold mb-8">
-			{pendingLockMatch.team1?.name}
-			-
-			{pendingLockMatch.team2?.name}
-			{' '}
-			{pendingLockPrediction.team1_goals}
-			-
-			{pendingLockPrediction.team2_goals}
-		  </div>
-
-		  <div className="flex justify-end gap-3">
-
-			<button
-			  onClick={() =>
-				lockGame2Prediction(
-				  pendingLockPrediction.id
-				)
-			  }
-			  className="btn-primary"
-			>
-			  Yes
-			</button>
-
-			<button
-			  onClick={() =>
-				setPendingLockPredictionId(null)
-			  }
-			  className="btn-primary"
-			>
-			  No
-			</button>
-
-		  </div>
-
-		</div>
-
-	  </div>
-
-	)}
-  </>
+  </div>
+</>
 )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			  
+			  
