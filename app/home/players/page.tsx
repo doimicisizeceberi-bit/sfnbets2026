@@ -45,6 +45,9 @@ export default function PlayersPage() {
 		const [game2Predictions, setGame2Predictions] =
 		  useState<any[]>([])
 
+		const [game2LockedCounts, setGame2LockedCounts] =
+		  useState<Record<number, number>>({})
+
 		const [game2Message, setGame2Message] =
 		  useState('')
 
@@ -144,6 +147,29 @@ export default function PlayersPage() {
 					  if (data) {
 						setGame2Matches(data)
 					  }
+
+					  await loadGame2LockedCounts()
+					}
+
+					async function loadGame2LockedCounts() {
+
+					  const { data } = await supabase
+						.from('game2predictions')
+						.select('match_id')
+						.eq('locked', true)
+
+					  if (!data) return
+
+					  const counts:
+						Record<number, number> = {}
+
+					  data.forEach((prediction: any) => {
+
+						counts[prediction.match_id] =
+						  (counts[prediction.match_id] || 0) + 1
+					  })
+
+					  setGame2LockedCounts(counts)
 					}
 
 
@@ -355,6 +381,8 @@ export default function PlayersPage() {
 
 											  setPendingLockPredictionId(null)
 
+											  await loadGame2LockedCounts()
+
 											  if (expandedGame2PlayerId) {
 												await openGame2(
 												  expandedGame2PlayerId
@@ -498,6 +526,17 @@ export default function PlayersPage() {
 					  match.id === pendingLockPrediction.match_id
 				  )
 				: null
+
+			function canRevealGame2Prediction(match: any) {
+
+			  return (
+				match.locked ||
+				(
+				  players.length > 0 &&
+				  (game2LockedCounts[match.id] || 0) >= players.length
+				)
+			  )
+			}
 
 
  return (
@@ -951,6 +990,10 @@ export default function PlayersPage() {
 
               if (!match) return null
 
+			  const maskPrediction =
+				prediction.locked &&
+				!canRevealGame2Prediction(match)
+
               return (
 
                 <div
@@ -1002,67 +1045,87 @@ export default function PlayersPage() {
                       {match.team1?.name}
                     </div>
 
-                    <input
-                      type="number"
-					  min={0}
-					  max={10}
-					  step={1}
+					{maskPrediction ? (
 
-                      disabled={
-                        prediction.locked
-                      }
+					  <div className="w-16 h-12 flex items-center justify-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white">
+						??
+					  </div>
 
-                      value={
-                        prediction.team1_goals ?? ''
-                      }
+					) : (
 
-                      onChange={(e) =>
-                        updateLocalGame2Prediction(
-                          prediction.id,
-                          'team1_goals',
-                          e.target.value === ''
-                            ? null
-                            : Number(
-                                e.target.value
-                              )
-                        )
-                      }
+					  <input
+						type="number"
+						min={0}
+						max={10}
+						step={1}
 
-                      className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-                    />
+						disabled={
+						  prediction.locked
+						}
+
+						value={
+						  prediction.team1_goals ?? ''
+						}
+
+						onChange={(e) =>
+						  updateLocalGame2Prediction(
+							prediction.id,
+							'team1_goals',
+							e.target.value === ''
+							  ? null
+							  : Number(
+								  e.target.value
+								)
+						  )
+						}
+
+						className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
+					  />
+
+					)}
 
                     <div className="font-bold text-xl">
                       -
                     </div>
 
-                    <input
-                      type="number"
-					  min={0}
-					  max={10}
-					  step={1}
+					{maskPrediction ? (
 
-                      disabled={
-                        prediction.locked
-                      }
+					  <div className="w-16 h-12 flex items-center justify-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white">
+						??
+					  </div>
 
-                      value={
-                        prediction.team2_goals ?? ''
-                      }
+					) : (
 
-                      onChange={(e) =>
-                        updateLocalGame2Prediction(
-                          prediction.id,
-                          'team2_goals',
-                          e.target.value === ''
-                            ? null
-                            : Number(
-                                e.target.value
-                              )
-                        )
-                      }
+					  <input
+						type="number"
+						min={0}
+						max={10}
+						step={1}
 
-                      className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-                    />
+						disabled={
+						  prediction.locked
+						}
+
+						value={
+						  prediction.team2_goals ?? ''
+						}
+
+						onChange={(e) =>
+						  updateLocalGame2Prediction(
+							prediction.id,
+							'team2_goals',
+							e.target.value === ''
+							  ? null
+							  : Number(
+								  e.target.value
+								)
+						  )
+						}
+
+						className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
+					  />
+
+					)}
 
                     <div className="input-modern">
                       {match.team2?.name}

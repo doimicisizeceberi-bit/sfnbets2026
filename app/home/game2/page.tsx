@@ -37,6 +37,8 @@ type PredictionRow = {
   team1_goals: number | null
   team2_goals: number | null
 
+  locked: boolean
+
   points_gained: number
 }
 
@@ -76,6 +78,12 @@ export default function Game2Page() {
 				const [activePlayers, setActivePlayers] =
 				  useState<any[]>([])
 
+				const [totalPlayers, setTotalPlayers] =
+				  useState(0)
+
+				const [lockedPredictionsByMatch, setLockedPredictionsByMatch] =
+				  useState<Record<number, number>>({})
+
 				const [predictionsByMatch, setPredictionsByMatch] =
 				  useState<Record<number, PredictionRow[]>>({})
 
@@ -98,9 +106,17 @@ export default function Game2Page() {
 			  .eq('active', true)
 			  .order('name')
 
+			const { data: allPlayersData } = await supabase
+			  .from('players')
+			  .select('id')
+
 			if (playersData) {
 			  setActivePlayers(playersData)
-			}	  
+			}
+
+			if (allPlayersData) {
+			  setTotalPlayers(allPlayersData.length)
+			}
 	  
 			const { data: predictionsData } =
 			  await supabase
@@ -118,10 +134,18 @@ export default function Game2Page() {
 				  const grouped:
 					Record<number, PredictionRow[]> = {}
 
+				  const lockedCounts:
+					Record<number, number> = {}
+
 				  predictionsData.forEach((row: any) => {
 
 					if (!grouped[row.match_id]) {
 					  grouped[row.match_id] = []
+					}
+
+					if (row.locked) {
+					  lockedCounts[row.match_id] =
+						(lockedCounts[row.match_id] || 0) + 1
 					}
 
 					grouped[row.match_id].push({
@@ -138,12 +162,16 @@ export default function Game2Page() {
 					  team2_goals:
 						row.team2_goals,
 
+					  locked:
+						row.locked,
+
 					  points_gained:
 						row.points_gained || 0
 					})
 				  })
 
 				  setPredictionsByMatch(grouped)
+				  setLockedPredictionsByMatch(lockedCounts)
 				}
 
 
@@ -331,6 +359,23 @@ function getMatchRows(
     )
 
   return rows
+}
+
+function canRevealPrediction(
+  match: Match
+) {
+
+  return (
+    match.locked ||
+    (
+      totalPlayers > 0 &&
+      (
+        lockedPredictionsByMatch[
+          match.id
+        ] || 0
+      ) >= totalPlayers
+    )
+  )
 }
 
 
@@ -864,6 +909,10 @@ function getMatchRows(
                 const p =
                   row.prediction
 
+				const maskPrediction =
+				  p?.locked &&
+				  !canRevealPrediction(match)
+
                 return (
 
 					<tr
@@ -904,7 +953,11 @@ function getMatchRows(
 						  >
 
 							{p
-							  ? `${p.team1_goals}-${p.team2_goals}`
+							  ? (
+								  maskPrediction
+									? '??'
+									: `${p.team1_goals}-${p.team2_goals}`
+								)
 							  : '❗'}
 
 						  </span>
