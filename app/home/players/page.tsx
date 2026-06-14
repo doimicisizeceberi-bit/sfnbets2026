@@ -359,12 +359,14 @@ export default function PlayersPage() {
 												return
 											  }
 
-											  const { error } = await supabase
-												.from('game2predictions')
-												.update({
-												  locked: true
-												})
-												.eq('id', predictionId)
+												const { error } = await supabase
+												  .from('game2predictions')
+												  .update({
+													team1_goals: prediction.team1_goals,
+													team2_goals: prediction.team2_goals,
+													locked: true
+												  })
+												  .eq('id', predictionId)
 
 											  if (error) {
 
