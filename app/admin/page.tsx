@@ -25,6 +25,118 @@ export default function AdminPage() {
 	  setGame2VisibilityMatchId
 	] = useState('')	
 		
+	const [
+		  newPlayerName,
+		  setNewPlayerName
+		] = useState('')
+
+	const [
+	  playerStatusId,
+	  setPlayerStatusId
+	] = useState('')
+	
+	
+	
+	
+	
+async function togglePlayerStatus() {
+
+  if (!playerStatusId) {
+
+    setMessage(
+      '❌ Enter player ID'
+    )
+
+    return
+  }
+
+  const numericId =
+    Number(playerStatusId)
+
+  const {
+    data: player,
+    error: fetchError
+  } = await supabase
+    .from('players')
+    .select('active,name')
+    .eq('id', numericId)
+    .single()
+
+  if (fetchError || !player) {
+
+    setMessage(
+      '❌ Player not found'
+    )
+
+    return
+  }
+
+  const { error } =
+    await supabase
+      .from('players')
+      .update({
+        active: !player.active
+      })
+      .eq(
+        'id',
+        numericId
+      )
+
+  if (error) {
+
+    setMessage(
+      '❌ Error updating player'
+    )
+
+    return
+  }
+
+  setMessage(
+    `👤 ${player.name} is now ${
+      !player.active
+        ? 'ACTIVE'
+        : 'INACTIVE'
+    }`
+  )
+
+  setPlayerStatusId('')
+}	
+	
+	
+async function addPlayer() {
+
+  if (!newPlayerName.trim()) {
+
+    setMessage(
+      '❌ Enter player name'
+    )
+
+    return
+  }
+
+  const { error } = await supabase
+    .from('players')
+    .insert({
+      name: newPlayerName,
+      active: true
+    })
+
+  if (error) {
+
+    setMessage(
+      '❌ Error adding player'
+    )
+
+    return
+  }
+
+  setMessage(
+    `✅ Player "${newPlayerName}" added`
+  )
+
+  setNewPlayerName('')
+}
+	
 	
 	
   async function unlockGame1Results() {
@@ -561,10 +673,93 @@ async function toggleGame2MatchVisibility() {
 </div>	  
 	  
 	  
+<div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+
+  <div className="flex justify-between items-center gap-6">
+
+    <div>
+
+      <h2 className="text-2xl font-bold mb-2">
+        👤 Player
+      </h2>
+
+      <div className="text-white/70">
+        Add new player
+      </div>
+
+    </div>
+
+    <div className="flex items-center gap-3">
+
+      <input
+        type="text"
+        placeholder="Player name"
+        value={newPlayerName}
+        onChange={(e) =>
+          setNewPlayerName(
+            e.target.value
+          )
+        }
+        className="input-modern w-60"
+      />
+
+      <button
+        onClick={addPlayer}
+        className="btn-primary"
+      >
+        + Add
+      </button>
+
+    </div>
+
+  </div>
+
+</div>	  
 	  
-	  
-	  
-	  
+<div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+
+  <div className="flex justify-between items-center gap-6">
+
+    <div>
+
+      <h2 className="text-2xl font-bold mb-2">
+        👥 Player Status
+      </h2>
+
+      <div className="text-white/70">
+        Toggle active/inactive player
+      </div>
+
+    </div>
+
+    <div className="flex items-center gap-3">
+
+      <input
+        type="number"
+        placeholder="Player ID"
+        value={playerStatusId}
+        onChange={(e) =>
+          setPlayerStatusId(
+            e.target.value
+          )
+        }
+        className="input-modern w-40"
+      />
+
+      <button
+        onClick={
+          togglePlayerStatus
+        }
+        className="btn-primary"
+      >
+        🔄 Toggle
+      </button>
+
+    </div>
+
+  </div>
+
+</div>	  
 	  
 
     </div>
