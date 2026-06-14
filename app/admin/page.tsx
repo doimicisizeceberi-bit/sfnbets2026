@@ -175,6 +175,47 @@ async function unlockGame2Match() {
 
   setGame2MatchId('')
 }
+
+
+
+
+
+async function addGame2Match() {
+
+  const { error } = await supabase
+    .from('game2matches')
+    .insert({
+      match_date: new Date()
+        .toISOString()
+        .split('T')[0],
+
+      match_time: '18:00',
+
+      team1_id: 1,
+      team2_id: 2,
+
+      locked: false,
+      visible: false
+    })
+
+  if (error) {
+
+    setMessage(
+      '❌ Error adding match'
+    )
+
+    return
+  }
+
+  setMessage(
+    '✅ Game 2 match added'
+  )
+}
+
+
+
+
+
 async function toggleGame2MatchVisibility() {
 
   if (!game2VisibilityMatchId) {
@@ -439,7 +480,40 @@ async function toggleGame2MatchVisibility() {
 								  </div>
 
 								</div>	  
-									  
+		
+
+
+<div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+
+  <div className="flex justify-between items-center">
+
+    <div>
+
+      <h2 className="text-2xl font-bold mb-2">
+        ➕ Game 2 Match
+      </h2>
+
+      <div className="text-white/70">
+        Create new match
+      </div>
+
+    </div>
+
+    <button
+      onClick={addGame2Match}
+      className="btn-primary"
+    >
+      + Add Match
+    </button>
+
+  </div>
+
+</div>
+
+
+
+
+		
 	  
 <div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
 

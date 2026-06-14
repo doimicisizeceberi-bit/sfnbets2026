@@ -563,20 +563,13 @@ function canRevealPrediction(
 
       <div className="glass-panel lg:col-span-3">
 
-        <div className="flex justify-between items-center mb-8">
+		<div className="flex justify-between items-center mb-8">
 
-          <h1 className="text-4xl font-bold">
-            ⚽ Game 2 Results
-          </h1>
+		  <h1 className="text-4xl font-bold">
+			⚽ Game 2 Results
+		  </h1>
 
-          <button
-            onClick={addMatch}
-            className="btn-primary"
-          >
-            + Add Match
-          </button>
-
-        </div>
+		</div>
 
         {message && (
 
