@@ -34,9 +34,19 @@ const [message, setMessage] = useState('')
 
 const [leaderboard, setLeaderboard] = useState<any[]>([])
 
+const [predictions, setPredictions] =
+  useState<any[]>([])
+
+const [expandedSection, setExpandedSection] =
+  useState<string | null>(null)
+
+
   useEffect(() => {
     loadData()
   }, [])
+  
+  
+
 
   async function loadData() {
 
@@ -98,6 +108,26 @@ const [leaderboard, setLeaderboard] = useState<any[]>([])
 
       setLocked(resultData.locked)
     }
+	
+	
+				const { data: predictionsData } =
+				  await supabase
+					.from('game1predictions')
+					.select(`
+					  *,
+					  players (
+						id,
+						name
+					  )
+					`)
+
+				if (predictionsData) {
+				  setPredictions(
+					predictionsData
+				  )
+				}	
+	
+	
 	
 	await loadLeaderboard()
   }
@@ -174,6 +204,43 @@ async function lockResults() {
 							!excluded.includes(team.id.toString())
 						)
 					  }
+
+
+function toggleSection(
+  section: string
+) {
+
+  setExpandedSection((prev) =>
+
+    prev === section
+      ? null
+      : section
+  )
+}
+
+function getTeamName(
+  teamId: number | null
+) {
+
+  return (
+    teams.find(
+      (team) =>
+        team.id === teamId
+    )?.name || '-'
+  )
+}
+
+function getGoalPlayerName(
+  playerId: number | null
+) {
+
+  return (
+    goalPlayers.find(
+      (player) =>
+        player.id === playerId
+    )?.name || '-'
+  )
+}
 
 
 async function loadLeaderboard() {
@@ -357,6 +424,107 @@ return (
           </select>
         </div>
 
+
+
+
+
+<div
+  className="
+    mt-2
+    cursor-pointer
+    font-semibold
+    text-yellow-400
+    hover:text-yellow-300
+    transition-colors
+  "
+  onClick={() =>
+    toggleSection(
+      'champion'
+    )
+  }
+>
+
+  {expandedSection === 'champion'
+    ? '▼ Predictions'
+    : '▶ Predictions'}
+
+</div>
+
+{expandedSection === 'champion' && (
+
+  <div
+    className="
+      mt-3
+      border-t
+      border-white/10
+      pt-3
+    "
+  >
+
+    <table className="w-full text-sm">
+
+      <tbody>
+
+        {predictions.map(
+          (prediction: any) => (
+
+            <tr
+              key={
+                prediction.id
+              }
+              className="
+                border-b
+                border-white/10
+              "
+            >
+
+			<td
+			  className="
+				py-2
+				pr-6
+				text-right
+				font-semibold
+			  "
+			>
+			  {prediction.players?.name}
+			</td>
+
+			<td
+			  className="
+				py-2
+				text-left
+				text-yellow-300
+				font-semibold
+			  "
+			>
+			  {getTeamName(
+				prediction.champion_team_id
+			  )}
+			</td>
+
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+
+
+
+
+
+
+
+
+
+
+
         <div>
           <label className="block mb-1 text-sm font-semibold">
             Finalista
@@ -382,6 +550,105 @@ return (
             ))}
           </select>
         </div>
+
+
+
+
+<div
+  className="
+    mt-2
+    cursor-pointer
+    font-semibold
+    text-yellow-400
+    hover:text-yellow-300
+    transition-colors
+  "
+  onClick={() =>
+    toggleSection(
+      'finalist'
+    )
+  }
+>
+
+  {expandedSection === 'finalist'
+    ? '▼ Predictions'
+    : '▶ Predictions'}
+
+</div>
+
+{expandedSection === 'finalist' && (
+
+  <div
+    className="
+      mt-3
+      border-t
+      border-white/10
+      pt-3
+    "
+  >
+
+    <table
+      className="
+        mx-auto
+        text-sm
+      "
+    >
+
+      <tbody>
+
+        {predictions.map(
+          (prediction: any) => (
+
+            <tr
+              key={prediction.id}
+              className="
+                border-b
+                border-white/10
+              "
+            >
+
+              <td
+                className="
+                  py-2
+                  pr-6
+                  text-right
+                  font-semibold
+                "
+              >
+                {prediction.players?.name}
+              </td>
+
+              <td
+                className="
+                  py-2
+                  text-left
+                  text-yellow-300
+                  font-semibold
+                "
+              >
+                {getTeamName(
+                  prediction.finalist_team_id
+                )}
+              </td>
+
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+
+
+
+
+
+
 
         <div>
           <label className="block mb-1 text-sm font-semibold">
@@ -411,6 +678,105 @@ return (
             ))}
           </select>
         </div>
+
+
+
+
+<div
+  className="
+    mt-2
+    cursor-pointer
+    font-semibold
+    text-yellow-400
+    hover:text-yellow-300
+    transition-colors
+  "
+onClick={() =>
+  toggleSection(
+    'semi1'
+  )
+}
+>
+
+  {expandedSection === 'semi1'
+    ? '▼ Predictions'
+    : '▶ Predictions'}
+
+</div>
+
+{expandedSection === 'semi1' && (
+
+  <div
+    className="
+      mt-3
+      border-t
+      border-white/10
+      pt-3
+    "
+  >
+
+    <table
+      className="
+        mx-auto
+        text-sm
+      "
+    >
+
+      <tbody>
+
+        {predictions.map(
+          (prediction: any) => (
+
+            <tr
+              key={prediction.id}
+              className="
+                border-b
+                border-white/10
+              "
+            >
+
+              <td
+                className="
+                  py-2
+                  pr-6
+                  text-right
+                  font-semibold
+                "
+              >
+                {prediction.players?.name}
+              </td>
+
+              <td
+                className="
+                  py-2
+                  text-left
+                  text-yellow-300
+                  font-semibold
+                "
+              >
+                {getTeamName(
+                  prediction.semifinalist1_team_id
+                )}
+              </td>
+
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+
+
+
+
+
+
 
         <div>
           <label className="block mb-1 text-sm font-semibold">
@@ -442,6 +808,104 @@ return (
           </select>
         </div>
 
+
+
+
+<div
+  className="
+    mt-2
+    cursor-pointer
+    font-semibold
+    text-yellow-400
+    hover:text-yellow-300
+    transition-colors
+  "
+onClick={() =>
+  toggleSection(
+    'semi2'
+  )
+}
+>
+
+  {expandedSection === 'semi2'
+    ? '▼ Predictions'
+    : '▶ Predictions'}
+
+</div>
+
+{expandedSection === 'semi2' && (
+
+  <div
+    className="
+      mt-3
+      border-t
+      border-white/10
+      pt-3
+    "
+  >
+
+    <table
+      className="
+        mx-auto
+        text-sm
+      "
+    >
+
+      <tbody>
+
+        {predictions.map(
+          (prediction: any) => (
+
+            <tr
+              key={prediction.id}
+              className="
+                border-b
+                border-white/10
+              "
+            >
+
+              <td
+                className="
+                  py-2
+                  pr-6
+                  text-right
+                  font-semibold
+                "
+              >
+                {prediction.players?.name}
+              </td>
+
+              <td
+                className="
+                  py-2
+                  text-left
+                  text-yellow-300
+                  font-semibold
+                "
+              >
+                {getTeamName(
+                  prediction.semifinalist2_team_id
+                )}
+              </td>
+
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+
+
+
+
+
+
         <div>
           <label className="block mb-1 text-sm font-semibold">
             Golgheter
@@ -470,6 +934,103 @@ return (
             ))}
           </select>
         </div>
+		
+		
+		
+<div
+  className="
+    mt-2
+    cursor-pointer
+    font-semibold
+    text-yellow-400
+    hover:text-yellow-300
+    transition-colors
+  "
+onClick={() =>
+  toggleSection(
+    'topGoal'
+  )
+}
+>
+
+  {expandedSection === 'topGoal'
+    ? '▼ Predictions'
+    : '▶ Predictions'}
+
+</div>
+
+{expandedSection === 'topGoal' && (
+
+  <div
+    className="
+      mt-3
+      border-t
+      border-white/10
+      pt-3
+    "
+  >
+
+    <table
+      className="
+        mx-auto
+        text-sm
+      "
+    >
+
+      <tbody>
+
+        {predictions.map(
+          (prediction: any) => (
+
+            <tr
+              key={prediction.id}
+              className="
+                border-b
+                border-white/10
+              "
+            >
+
+              <td
+                className="
+                  py-2
+                  pr-6
+                  text-right
+                  font-semibold
+                "
+              >
+                {prediction.players?.name}
+              </td>
+
+				<td
+				  className="
+					py-2
+					text-left
+					text-yellow-300
+					font-semibold
+				  "
+				>
+				  {getGoalPlayerName(
+					prediction.top_goal_player_id
+				  )}
+				</td>
+
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}
+
+		
+		
+		
+		
 
         <div>
           <label className="block mb-1 text-sm font-semibold">
@@ -498,6 +1059,102 @@ return (
               ))}
           </select>
         </div>
+		
+		
+		
+<div
+  className="
+    mt-2
+    cursor-pointer
+    font-semibold
+    text-yellow-400
+    hover:text-yellow-300
+    transition-colors
+  "
+onClick={() =>
+  toggleSection(
+    'surprise'
+  )
+}
+>
+
+  {expandedSection === 'surprise'
+    ? '▼ Predictions'
+    : '▶ Predictions'}
+
+</div>
+
+{expandedSection === 'surprise' && (
+
+  <div
+    className="
+      mt-3
+      border-t
+      border-white/10
+      pt-3
+    "
+  >
+
+    <table
+      className="
+        mx-auto
+        text-sm
+      "
+    >
+
+      <tbody>
+
+        {predictions.map(
+          (prediction: any) => (
+
+            <tr
+              key={prediction.id}
+              className="
+                border-b
+                border-white/10
+              "
+            >
+
+              <td
+                className="
+                  py-2
+                  pr-6
+                  text-right
+                  font-semibold
+                "
+              >
+                {prediction.players?.name}
+              </td>
+
+              <td
+                className="
+                  py-2
+                  text-left
+                  text-yellow-300
+                  font-semibold
+                "
+              >
+                {getTeamName(
+                  prediction.surprise_team_id
+                )}
+              </td>
+
+            </tr>
+
+          )
+        )}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+)}		
+		
+		
+		
+		
 
       </div>
 
