@@ -35,9 +35,30 @@ export default function AdminPage() {
 	  setPlayerStatusId
 	] = useState('')
 	
+				const [
+				  liveMatchId,
+				  setLiveMatchId
+				] = useState('')
+
+				const [
+				  liveScore1,
+				  setLiveScore1
+				] = useState('')
+
+				const [
+				  liveScore2,
+				  setLiveScore2
+				] = useState('')
+
+				const [
+				  liveMinute,
+				  setLiveMinute
+				] = useState('')	
 	
-	
-	
+		const [
+		  liveSource,
+		  setLiveSource
+		] = useState('auto')
 	
 async function togglePlayerStatus() {
 
@@ -390,6 +411,184 @@ async function toggleGame2MatchVisibility() {
 
   setGame2VisibilityMatchId('')
 }
+
+
+
+
+							async function enableLiveMatch() {
+
+
+
+							  if (!liveMatchId) {
+
+								setMessage(
+								  '❌ Enter match ID'
+								)
+
+								return
+							  }
+
+							  const numericMatchId =
+								Number(liveMatchId)
+
+							  //
+							  // Disable live on ALL matches
+							  //
+
+							  const { error: disableError } =
+								await supabase
+								  .from('game2matches')
+								  .update({
+									live_enabled: false
+								  })
+								  .neq('id', 0)
+
+							  if (disableError) {
+
+								setMessage(
+								  '❌ Error disabling other live matches'
+								)
+
+								return
+							  }
+
+							  //
+							  // Enable selected match
+							  //
+
+							  const { error } =
+								await supabase
+								  .from('game2matches')
+									.update({
+
+									  live_enabled: true,
+
+									  live_source:
+										liveSource
+
+									})
+								  .eq(
+									'id',
+									numericMatchId
+								  )
+
+							  if (error) {
+
+								setMessage(
+								  '❌ Error enabling live mode'
+								)
+
+								return
+							  }
+
+							  setMessage(
+								`🔴 Match #${liveMatchId} live enabled`
+							  )
+							}
+
+
+
+async function updateLiveMatch() {
+
+  if (!liveMatchId) {
+
+    setMessage(
+      '❌ Enter match ID'
+    )
+
+    return
+  }
+
+  const { error } =
+    await supabase
+      .from('game2matches')
+			.update({
+
+			  live_score1:
+				liveScore1 === ''
+				  ? null
+				  : Number(liveScore1),
+
+			  live_score2:
+				liveScore2 === ''
+				  ? null
+				  : Number(liveScore2),
+
+			  live_minute:
+				liveMinute || null,
+
+			  live_source:
+				liveSource
+
+			})
+      .eq(
+        'id',
+        Number(liveMatchId)
+      )
+
+  if (error) {
+
+    setMessage(
+      '❌ Error updating live score'
+    )
+
+    return
+  }
+
+  setMessage(
+    `📡 Live updated for match #${liveMatchId}`
+  )
+}
+
+
+
+						async function disableLiveMatch() {
+
+						  if (!liveMatchId) {
+
+							setMessage(
+							  '❌ Enter match ID'
+							)
+
+							return
+						  }
+
+						  const { error } =
+							await supabase
+							  .from('game2matches')
+							  .update({
+
+								live_enabled: false,
+
+								live_score1: null,
+								live_score2: null,
+
+								live_minute: null
+
+							  })
+							  .eq(
+								'id',
+								Number(liveMatchId)
+							  )
+
+						  if (error) {
+
+							setMessage(
+							  '❌ Error disabling live mode'
+							)
+
+							return
+						  }
+
+						  setMessage(
+							`⚫ Match #${liveMatchId} live disabled`
+						  )
+						}
+
+
+
+
+
   return (
 
     <div className="glass-panel max-w-3xl">
@@ -672,6 +871,189 @@ async function toggleGame2MatchVisibility() {
 
 </div>	  
 	  
+
+
+						<div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+
+						  <div>
+
+							<h2 className="text-2xl font-bold mb-2">
+							  📡 Game 2 Live
+							</h2>
+
+							<div className="text-white/70 mb-4">
+							  Manual live score control
+							</div>
+
+							<div className="flex flex-wrap gap-3">
+
+							  <input
+								type="number"
+								placeholder="Match ID"
+								value={liveMatchId}
+								onChange={(e) =>
+								  setLiveMatchId(
+									e.target.value
+								  )
+								}
+								className="input-modern w-32"
+							  />
+
+							  <input
+								type="number"
+								placeholder="Home"
+								value={liveScore1}
+								onChange={(e) =>
+								  setLiveScore1(
+									e.target.value
+								  )
+								}
+								className="input-modern w-24"
+							  />
+
+							  <input
+								type="number"
+								placeholder="Away"
+								value={liveScore2}
+								onChange={(e) =>
+								  setLiveScore2(
+									e.target.value
+								  )
+								}
+								className="input-modern w-24"
+							  />
+
+							  <input
+								type="text"
+								placeholder="67'"
+								value={liveMinute}
+								onChange={(e) =>
+								  setLiveMinute(
+									e.target.value
+								  )
+								}
+								className="input-modern w-24"
+							  />
+
+							</div>
+
+
+									<div
+									  className="
+										mt-4
+										flex
+										gap-6
+										items-center
+									  "
+									>
+
+									  <label
+										className="
+										  flex
+										  items-center
+										  gap-2
+										  cursor-pointer
+										"
+									  >
+
+										<input
+										  type="radio"
+										  name="liveSource"
+										  value="auto"
+										  checked={
+											liveSource ===
+											'auto'
+										  }
+										  onChange={() =>
+											setLiveSource(
+											  'auto'
+											)
+										  }
+										/>
+
+										<span>
+										  Auto
+										</span>
+
+									  </label>
+
+									  <label
+										className="
+										  flex
+										  items-center
+										  gap-2
+										  cursor-pointer
+										"
+									  >
+
+										<input
+										  type="radio"
+										  name="liveSource"
+										  value="manual"
+										  checked={
+											liveSource ===
+											'manual'
+										  }
+										  onChange={() =>
+											setLiveSource(
+											  'manual'
+											)
+										  }
+										/>
+
+										<span>
+										  Manual
+										</span>
+
+									  </label>
+
+									</div>
+
+
+
+
+
+
+							<div className="flex gap-3 mt-4">
+
+							  <button
+								onClick={
+								  enableLiveMatch
+								}
+								className="btn-primary"
+							  >
+								🔴 Enable
+							  </button>
+
+							  <button
+								onClick={
+								  updateLiveMatch
+								}
+								className="btn-primary"
+							  >
+								📡 Update
+							  </button>
+
+							  <button
+								onClick={
+								  disableLiveMatch
+								}
+								className="btn-primary"
+							  >
+								⚫ Disable
+							  </button>
+
+							</div>
+
+						  </div>
+
+						</div>
+
+
+
+
+
+
 	  
 <div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
 

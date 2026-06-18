@@ -15,6 +15,14 @@ type Match = {
 	match_time: string | null
 	
 	  visible: boolean
+	  
+		  live_enabled: boolean
+
+		  live_score1: number | null
+		  live_score2: number | null
+
+		  live_minute: string | null	  
+	  
 	
   team1_id: number
   team2_id: number
@@ -64,6 +72,55 @@ function getMatchResult(
 }
 
 
+function getLivePoints(
+  prediction: PredictionRow,
+  liveScore1: number,
+  liveScore2: number
+) {
+
+  if (
+    prediction.team1_goals === null ||
+    prediction.team2_goals === null
+  ) {
+    return 0
+  }
+
+  if (
+
+    prediction.team1_goals ===
+      liveScore1 &&
+
+    prediction.team2_goals ===
+      liveScore2
+
+  ) {
+    return 5
+  }
+
+  const liveResult =
+    getMatchResult(
+      liveScore1,
+      liveScore2
+    )
+
+  const predictionResult =
+    getMatchResult(
+      prediction.team1_goals,
+      prediction.team2_goals
+    )
+
+  if (
+    liveResult ===
+    predictionResult
+  ) {
+    return 2
+  }
+
+  return 0
+}
+
+
+
 export default function Game2Page() {
 
   const [teams, setTeams] = useState<Team[]>([])
@@ -95,6 +152,45 @@ export default function Game2Page() {
   useEffect(() => {
     loadData()
   }, [])
+
+useEffect(() => {
+
+  const channel = supabase
+
+    .channel(
+      'game2matches-live'
+    )
+
+    .on(
+
+      'postgres_changes',
+
+      {
+        event: '*',
+        schema: 'public',
+        table: 'game2matches'
+      },
+
+      () => {
+
+        loadData()
+      }
+
+    )
+
+    .subscribe()
+
+  return () => {
+
+    supabase.removeChannel(
+      channel
+    )
+  }
+
+}, [])
+
+
+
 
   async function loadData() {
 
@@ -605,35 +701,50 @@ function canRevealPrediction(
 														  "
 														>
 
-																{expandedMatchId === match.id
-																  ? '▼'
-																  : '▶'}
+																		{expandedMatchId === match.id
+																		  ? '▼'
+																		  : '▶'}
 
-																{' '}
+																		{' '}
 
-																#{match.id}
+																		{match.live_enabled && '🔴 LIVE '}
 
-																{' '}
+																		#{match.id}
 
-																{match.locked && '🔒 '}
+																		{' '}
 
-																{match.team1?.name}
+																		{match.locked && '🔒 '}
 
-														  {' '}
+																		{match.team1?.name}
 
-														  {match.team1_goals !== null &&
-														   match.team2_goals !== null
-															? `${match.team1_goals}-${match.team2_goals}`
-															: '-'}
+																		{' '}
 
-														  {' '}
+																		{match.live_enabled
 
-														  {match.team2?.name}
+																		  ? `${match.live_score1 ?? 0}-${match.live_score2 ?? 0}`
 
-														  {' '}
+																		  : (
 
-														  ({predictionCount(match.id)}/{activePlayers.length})
+																			  match.team1_goals !== null &&
+																			  match.team2_goals !== null
 
+																				? `${match.team1_goals}-${match.team2_goals}`
+																				: '-'
+																			)
+																		}
+
+																		{' '}
+
+																		{match.team2?.name}
+
+																		{' '}
+
+																		{match.live_enabled &&
+																		  match.live_minute}
+
+																		{' '}
+
+																		({predictionCount(match.id)}/{activePlayers.length})
 														</div>
 
 										</div>
@@ -883,23 +994,84 @@ function canRevealPrediction(
 
 
 
-      {expandedMatchId === match.id && (
+  {expandedMatchId === match.id && (
+
+  <div
+    className="
+      mt-4
+      border-t
+      border-white/10
+      pt-4
+    "
+  >
+
+    {match.live_enabled && (
+
+      <div
+        className="
+          mb-4
+          rounded-xl
+          border
+          border-red-500/40
+          bg-red-500/10
+          p-4
+          text-center
+        "
+      >
 
         <div
           className="
-            mt-4
-            border-t
-            border-white/10
-            pt-4
+            text-red-400
+            font-bold
+            text-lg
+          "
+        >
+          🔴 LIVE
+        </div>
+
+        <div
+          className="
+            mt-1
+            text-xl
+            font-bold
           "
         >
 
-          <table
-            className="
-				mx-auto
-              text-sm
-            "
-          >
+          {match.team1?.name}
+
+          {' '}
+
+          {match.live_score1 ?? 0}
+
+          {' - '}
+
+          {match.live_score2 ?? 0}
+
+          {' '}
+
+          {match.team2?.name}
+
+        </div>
+
+        <div
+          className="
+            mt-1
+            text-white/70
+          "
+        >
+          {match.live_minute}
+        </div>
+
+      </div>
+
+    )}
+
+    <table
+      className="
+        mx-auto
+        text-sm
+      "
+    >
 
             <thead>
 
@@ -933,6 +1105,22 @@ function canRevealPrediction(
 
                 const p =
                   row.prediction
+				  
+				  
+				const livePoints =
+
+				  match.live_enabled &&
+
+				  p
+
+					? getLivePoints(
+						p,
+						match.live_score1 ?? 0,
+						match.live_score2 ?? 0
+					  )
+
+					: 0				  
+				  
 
 				const maskPrediction =
 				  p?.locked &&
@@ -998,6 +1186,8 @@ function canRevealPrediction(
   "
 >
 
+
+
   {p?.points_gained === 5 && (
 
     <span
@@ -1036,7 +1226,106 @@ function canRevealPrediction(
 
 </td>
 
+
+
+
+
                     )}
+					
+					
+					
+{match.live_enabled && (
+
+  <td
+    className="
+      text-left
+      pl-3
+    "
+  >
+
+    {livePoints === 5 && (
+
+      <span
+        className="
+          inline-flex
+          items-center
+          gap-2
+		  animate-pulse
+        "
+      >
+
+        <span
+          className="
+            inline-block
+            px-2
+            py-1
+            rounded-lg
+            font-bold
+            bg-yellow-500
+            text-black
+          "
+        >
+          5
+        </span>
+
+        <span
+			className="
+			  text-red-400
+			  font-bold
+			  animate-pulse
+			"
+        >
+          LIVE
+        </span>
+
+      </span>
+
+    )}
+
+    {livePoints === 2 && (
+
+      <span
+        className="
+          inline-flex
+          items-center
+          gap-2
+		  animate-pulse
+        "
+      >
+
+        <span
+          className="
+            inline-block
+            px-2
+            py-1
+            rounded-lg
+            font-bold
+            bg-gray-300
+            text-black
+          "
+        >
+          2
+        </span>
+
+        <span
+			className="
+			  text-red-400
+			  font-bold
+			  animate-pulse
+			"
+        >
+          LIVE
+        </span>
+
+      </span>
+
+    )}
+
+  </td>
+
+)}		
+					
+					
 
                   </tr>
 
