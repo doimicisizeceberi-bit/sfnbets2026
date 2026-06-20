@@ -768,18 +768,39 @@ async function calculateMatchPointsGame3(
 
 				if (!grouped[playerId]) {
 
-				  grouped[playerId] = {
+					grouped[playerId] = {
 
-					id: row.players.id,
+					  id: row.players.id,
 
-					name: row.players.name,
+					  name: row.players.name,
 
-					points: 0
-				  }
+					  points: 0,
+
+					  exactCount: 0,
+
+					  resultCount: 0
+					}
 				}
 
 				grouped[playerId].points +=
 				  row.points_gained || 0
+				  
+				  
+					if (row.points_gained === 5) {
+
+					  grouped[playerId].exactCount += 1
+
+					}
+
+					if (row.points_gained === 2) {
+
+					  grouped[playerId].resultCount += 1
+
+					}				  
+				  
+				  
+				  
+				  
 			  })
 
 			  const rows =
@@ -1541,39 +1562,122 @@ async function calculateMatchPointsGame3(
             </tr>
           </thead>
 
-				<tbody>
+									<tbody>
 
-				  {leaderboard.map(
-					(row, index) => (
+									  {leaderboard.map(
+										(row, index) => (
 
-					  <tr key={row.id}>
+										  <Fragment key={row.id}>
 
-<td>
+											<tr>
 
-  {index === 0 ||
+											<td
+											  className="
+												font-bold
+												text-xl
+												text-red-400
+											  "
+											>
 
-   leaderboard[index - 1].points !==
-   row.points
+												{index === 0 ||
 
-    ? index + 1
-    : ''}
+												 leaderboard[index - 1].points !==
+												 row.points
 
-</td>
+												  ? index + 1
+												  : ''}
 
-						<td>
-						  {row.name}
-						</td>
+											  </td>
 
-						<td className="font-bold">
-						  {row.points}
-						</td>
+											<td
+											  className="
+												font-bold
+												text-xl
+												text-red-400
+											  "
+											>
+											  {row.name}
+											</td>
 
-					  </tr>
+											<td
+											  className="
+												font-extrabold
+												text-2xl
+												text-red-400
+											  "
+											>
+											  {row.points}
+											</td>
 
-					)
-				  )}
+											</tr>
 
-				</tbody>
+<tr>
+
+  <td></td>
+
+  <td></td>
+
+	<td
+	  className="
+		text-xs
+		text-white/50
+		pb-3
+		pl-2
+	  "
+	>
+
+    <div className="mb-1">
+
+      <span
+        className="
+          inline-block
+          px-2
+          py-1
+          rounded-lg
+          font-bold
+          bg-yellow-500
+          text-black
+          mr-1
+        "
+      >
+        5
+      </span>
+
+      × {row.exactCount}
+
+    </div>
+
+    <div>
+
+      <span
+        className="
+          inline-block
+          px-2
+          py-1
+          rounded-lg
+          font-bold
+          bg-gray-300
+          text-black
+          mr-1
+        "
+      >
+        2
+      </span>
+
+      × {row.resultCount}
+
+    </div>
+
+  </td>
+
+</tr>
+
+										  </Fragment>
+
+										)
+									  )}
+
+									</tbody>
 
         </table>
 
