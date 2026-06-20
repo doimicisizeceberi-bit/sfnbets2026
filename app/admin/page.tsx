@@ -313,37 +313,37 @@ async function unlockGame2Match() {
 
 
 
-async function addGame2Match() {
+			async function addGame2Match() {
 
-  const { error } = await supabase
-    .from('game2matches')
-    .insert({
-      match_date: new Date()
-        .toISOString()
-        .split('T')[0],
+			  const { error } = await supabase
+				.from('game2matches')
+				.insert({
+				  match_date: new Date()
+					.toISOString()
+					.split('T')[0],
 
-      match_time: '18:00',
+				  match_time: '18:00',
 
-      team1_id: 1,
-      team2_id: 2,
+				  team1_id: 1,
+				  team2_id: 2,
 
-      locked: false,
-      visible: false
-    })
+				  locked: false,
+				  visible: false
+				})
 
-  if (error) {
+			  if (error) {
 
-    setMessage(
-      '❌ Error adding match'
-    )
+				setMessage(
+				  '❌ Error adding match'
+				)
 
-    return
-  }
+				return
+			  }
 
-  setMessage(
-    '✅ Game 2 match added'
-  )
-}
+			  setMessage(
+				'✅ Game 2 match added'
+			  )
+			}
 
 
 
@@ -430,6 +430,10 @@ async function toggleGame2MatchVisibility() {
 
 							  const numericMatchId =
 								Number(liveMatchId)
+
+
+										
+
 
 							  //
 							  // Disable live on ALL matches

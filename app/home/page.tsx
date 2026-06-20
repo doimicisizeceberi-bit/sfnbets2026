@@ -25,6 +25,17 @@ export default function HomePage() {
         👥 Players
       </Link>
 
+
+      <Link
+        href="/home/game3"
+        className="dashboard-card"
+      >
+        🏆 Game 3 (experiment)
+      </Link>
+
+    
+
     </div>
+	
   )
 }

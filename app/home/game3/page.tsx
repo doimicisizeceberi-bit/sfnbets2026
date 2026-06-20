@@ -51,6 +51,7 @@ type PredictionRow = {
   locked: boolean
 
   points_gained: number
+    points_gained_game3: number
 }
 
 
@@ -71,54 +72,106 @@ function getMatchResult(
   return 'AWAY_WIN'
 }
 
+						function getLivePoints(
+						  prediction: PredictionRow,
+						  liveScore1: number,
+						  liveScore2: number
+						) {
 
-function getLivePoints(
-  prediction: PredictionRow,
-  liveScore1: number,
-  liveScore2: number
-) {
+						  if (
+							prediction.team1_goals === null ||
+							prediction.team2_goals === null
+						  ) {
+							return 0
+						  }
 
-  if (
-    prediction.team1_goals === null ||
-    prediction.team2_goals === null
-  ) {
-    return 0
-  }
+						  const predictedScore1 =
+							prediction.team1_goals
 
-  if (
+						  const predictedScore2 =
+							prediction.team2_goals
 
-    prediction.team1_goals ===
-      liveScore1 &&
+						  // Exact score
 
-    prediction.team2_goals ===
-      liveScore2
+						  if (
 
-  ) {
-    return 5
-  }
+							predictedScore1 ===
+							  liveScore1 &&
 
-  const liveResult =
-    getMatchResult(
-      liveScore1,
-      liveScore2
-    )
+							predictedScore2 ===
+							  liveScore2
 
-  const predictionResult =
-    getMatchResult(
-      prediction.team1_goals,
-      prediction.team2_goals
-    )
+						  ) {
 
-  if (
-    liveResult ===
-    predictionResult
-  ) {
-    return 2
-  }
+							return 8
+						  }
 
-  return 0
-}
+						  const liveResult =
+							getMatchResult(
+							  liveScore1,
+							  liveScore2
+							)
 
+						  const predictionResult =
+							getMatchResult(
+							  predictedScore1,
+							  predictedScore2
+							)
+
+						  const liveGoalDiff =
+							liveScore1 -
+							liveScore2
+
+						  const predictionGoalDiff =
+							predictedScore1 -
+							predictedScore2
+
+						  const correctGoalDiff =
+							liveGoalDiff ===
+							predictionGoalDiff
+
+						  const correctHomeGoals =
+							liveScore1 ===
+							predictedScore1
+
+						  const correctAwayGoals =
+							liveScore2 ===
+							predictedScore2
+
+						  if (
+							liveResult ===
+							predictionResult
+						  ) {
+
+							if (
+
+							  correctGoalDiff ||
+
+							  correctHomeGoals ||
+
+							  correctAwayGoals
+
+							) {
+
+							  return 4
+							}
+
+							return 3
+						  }
+
+						  if (
+
+							correctHomeGoals ||
+
+							correctAwayGoals
+
+						  ) {
+
+							return 1
+						  }
+
+						  return 0
+						}
 
 
 export default function Game2Page() {
@@ -265,7 +318,10 @@ useEffect(() => {
 						row.locked,
 
 					  points_gained:
-						row.points_gained || 0
+						row.points_gained || 0,
+						
+						points_gained_game3:
+						  row.points_gained_game3 || 0
 					})
 				  })
 
@@ -299,72 +355,8 @@ useEffect(() => {
 	await loadLeaderboard()
   }
 
-  async function addMatch() {
-
-    const { error } = await supabase
-      .from('game2matches')
-				.insert({
-				  match_date: new Date()
-					.toISOString()
-					.split('T')[0],
-
-				  match_time: '18:00',
-
-				  team1_id: teams[0]?.id,
-				  team2_id: teams[1]?.id,
-
-				  locked: false,
-				  visible: false
-				})
-
-    if (error) {
-
-      setMessage(
-        '❌ Error adding match'
-      )
-
-      return
-    }
-
-    setMessage(
-      '✅ Match added'
-    )
-
-    loadData()
-  }
-
-  async function updateMatch(
-    match: Match
-  ) {
-
-    const { error } = await supabase
-      .from('game2matches')
-      .update({
-        match_date: match.match_date,
-		match_time: match.match_time,
-        team1_id: match.team1_id,
-        team2_id: match.team2_id,
-
-        team1_goals: match.team1_goals,
-        team2_goals: match.team2_goals,
-      })
-      .eq('id', match.id)
-
-    if (error) {
-
-      setMessage(
-        '❌ Error updating match'
-      )
-
-      return
-    }
-
-    setMessage(
-      `✅ Match #${match.id} updated`
-    )
-
-    loadData()
-  }
+  
+  
 
   async function lockMatch(
     matchId: number
@@ -391,10 +383,6 @@ useEffect(() => {
     )
 
 				await calculateMatchPoints(
-				  matchId
-				)
-
-				await calculateMatchPointsGame3(
 				  matchId
 				)
 
@@ -572,177 +560,6 @@ function canRevealPrediction(
 						  .eq('id', prediction.id)
 					  }
 					}
-					
-	
-
-
-
-	
-					
-async function calculateMatchPointsGame3(
-  matchId: number
-) {
-
-  const { data: match } =
-    await supabase
-      .from('game2matches')
-      .select('*')
-      .eq('id', matchId)
-      .single()
-
-  if (!match) return
-
-  const { data: predictions } =
-    await supabase
-      .from('game2predictions')
-      .select('*')
-      .eq('match_id', matchId)
-
-  if (!predictions) return
-
-  for (const prediction of predictions) {
-
-    let points = 0
-
-    const officialScore1 =
-      match.team1_goals
-
-    const officialScore2 =
-      match.team2_goals
-
-    const predictedScore1 =
-      prediction.team1_goals
-
-    const predictedScore2 =
-      prediction.team2_goals
-
-    if (
-      predictedScore1 === null ||
-      predictedScore2 === null
-    ) {
-
-      points = 0
-
-    } else if (
-
-      predictedScore1 === officialScore1 &&
-      predictedScore2 === officialScore2
-
-    ) {
-
-      points = 8
-
-    } else {
-
-      const officialResult =
-        getMatchResult(
-          officialScore1,
-          officialScore2
-        )
-
-      const predictedResult =
-        getMatchResult(
-          predictedScore1,
-          predictedScore2
-        )
-
-      const officialGoalDiff =
-        officialScore1 -
-        officialScore2
-
-      const predictedGoalDiff =
-        predictedScore1 -
-        predictedScore2
-
-      const correctGoalDiff =
-        officialGoalDiff ===
-        predictedGoalDiff
-
-      const correctHomeGoals =
-        officialScore1 ===
-        predictedScore1
-
-      const correctAwayGoals =
-        officialScore2 ===
-        predictedScore2
-
-      // CORRECT RESULT
-
-      if (
-        officialResult ===
-        predictedResult
-      ) {
-
-        // DRAWS
-        // Always 3 unless exact score (already handled above)
-
-        if (
-          officialResult === 'DRAW'
-        ) {
-
-          points = 3
-
-        } else {
-
-          // HOME WIN / AWAY WIN
-
-          points = 3
-
-          if (
-
-            correctGoalDiff ||
-
-            correctHomeGoals ||
-
-            correctAwayGoals
-
-          ) {
-
-            points = 4
-
-          }
-
-        }
-
-      } else {
-
-        // WRONG RESULT
-
-        if (
-
-          correctHomeGoals ||
-
-          correctAwayGoals
-
-        ) {
-
-          points = 1
-
-        } else {
-
-          points = 0
-
-        }
-
-      }
-
-    }
-
-    await supabase
-      .from('game2predictions')
-      .update({
-        points_gained_game3:
-          points
-      })
-      .eq(
-        'id',
-        prediction.id
-      )
-
-  }
-
-}
-					
 
 			async function loadLeaderboard() {
 
@@ -750,7 +567,7 @@ async function calculateMatchPointsGame3(
 				.from('game2predictions')
 				.select(`
 				  player_id,
-				  points_gained,
+				  points_gained_game3,
 				  players (
 					id,
 					name
@@ -779,7 +596,7 @@ async function calculateMatchPointsGame3(
 				}
 
 				grouped[playerId].points +=
-				  row.points_gained || 0
+				  row.points_gained_game3 || 0
 			  })
 
 			  const rows =
@@ -797,36 +614,7 @@ async function calculateMatchPointsGame3(
 			  setLeaderboard(rows)
 			}
 
-  function updateLocalMatch(
-    id: number,
-    field: string,
-    value: any
-  ) {
 
-    setMatches((prev) =>
-      prev.map((match) => {
-
-        if (match.id !== id) {
-          return match
-        }
-
-        return {
-          ...match,
-          [field]: value
-        }
-      })
-    )
-  }
-
-  function availableTeams(
-    currentTeamId: number
-  ) {
-
-    return teams.filter(
-      (team) =>
-        team.id !== currentTeamId
-    )
-  }
 
   return (
 
@@ -837,9 +625,16 @@ async function calculateMatchPointsGame3(
 		<div className="flex justify-between items-center mb-8">
 
 		  <h1 className="text-4xl font-bold">
-			⚽ Game 2 Results
+			⚽ Game 3 Concept
 		  </h1>
-
+				<div className="mt-2 text-sm text-white/70">
+				  Joc TEST • Premii:
+				  <span className="font-semibold"> 8p</span> scor corect,
+				  <span className="font-semibold"> 3p</span> pronostic corect (1/X/2),
+				  <span className="font-semibold"> 1p bonus</span> pentru diferență exacta de scor la victorie
+				  <span className="font-semibold"> sau</span> numar exact de goluri marcate de gazde
+				  <span className="font-semibold"> sau</span> numar exact de goluri marcate de oaspeți.
+				</div>
 		</div>
 
         {message && (
@@ -949,41 +744,13 @@ async function calculateMatchPointsGame3(
           #{match.id}
         </span>
 
-        <input
-          type="date"
+		<span>
+		  {match.match_date}
+		</span>
 
-          disabled={match.locked}
-
-          value={match.match_date}
-
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'match_date',
-              e.target.value
-            )
-          }
-
-          className="bg-transparent border border-white/10 rounded px-2 py-1"
-        />
-
-        <input
-          type="time"
-
-          disabled={match.locked}
-
-          value={match.match_time ?? ''}
-
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'match_time',
-              e.target.value
-            )
-          }
-
-          className="bg-transparent border border-white/10 rounded px-2 py-1 w-[90px]"
-        />
+		<span>
+		  {match.match_time}
+		</span>
 
         {match.locked && (
 
@@ -997,163 +764,57 @@ async function calculateMatchPointsGame3(
 
       <div className="grid grid-cols-[1fr_auto_auto_auto_1fr_auto] gap-3 items-center">
 
-        <select
-          disabled={match.locked}
+		<div className="font-semibold">
+		  {match.team1?.name}
+		</div>
 
-          value={match.team1_id}
-
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team1_id',
-              Number(e.target.value)
-            )
-          }
-
-          className="input-modern"
-        >
-
-          {teams
-            .filter(
-              (team) =>
-                team.id !==
-                match.team2_id
-            )
-            .map((team) => (
-
-              <option
-                key={team.id}
-                value={team.id}
-              >
-                {team.name}
-              </option>
-
-            ))}
-
-        </select>
-
-        <input
-          type="number"
-
-          disabled={match.locked}
-
-          value={
-            match.team1_goals ?? ''
-          }
-
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team1_goals',
-              e.target.value === ''
-                ? null
-                : Number(e.target.value)
-            )
-          }
-
-          className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-        />
+		<div
+		  className="
+			w-16
+			h-12
+			flex
+			items-center
+			justify-center
+			text-xl
+			font-bold
+			rounded-lg
+			bg-white/10
+			border
+			border-white/20
+		  "
+		>
+		  {match.team1_goals ?? '-'}
+		</div>
 
         <div className="font-bold text-xl">
           -
         </div>
 
-        <input
-          type="number"
+			<div
+			  className="
+				w-16
+				h-12
+				flex
+				items-center
+				justify-center
+				text-xl
+				font-bold
+				rounded-lg
+				bg-white/10
+				border
+				border-white/20
+			  "
+			>
+			  {match.team2_goals ?? '-'}
+			</div>
 
-          disabled={match.locked}
+		<div className="font-semibold">
+		  {match.team2?.name}
+		</div>
 
-          value={
-            match.team2_goals ?? ''
-          }
-
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team2_goals',
-              e.target.value === ''
-                ? null
-                : Number(e.target.value)
-            )
-          }
-
-          className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-        />
-
-        <select
-          disabled={match.locked}
-
-          value={match.team2_id}
-
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team2_id',
-              Number(e.target.value)
-            )
-          }
-
-          className="input-modern"
-        >
-
-          {teams
-            .filter(
-              (team) =>
-                team.id !==
-                match.team1_id
-            )
-            .map((team) => (
-
-              <option
-                key={team.id}
-                value={team.id}
-              >
-                {team.name}
-              </option>
-
-            ))}
-
-        </select>
-
-        <div>
-
-          {!match.locked ? (
-
-            <div className="flex gap-2">
-
-              <button
-                onClick={() =>
-                  updateMatch(match)
-                }
-                className="btn-primary"
-              >
-                Update
-              </button>
-
-              <button
-                disabled={
-                  match.team1_goals === null ||
-                  match.team2_goals === null
-                }
-                onClick={() =>
-                  lockMatch(match.id)
-                }
-                className="btn-primary"
-              >
-                🔒
-              </button>
-
-            </div>
-
-          ) : (
-
-            <div className="text-sm font-semibold">
-              🔒 Match #{match.id}
-            </div>
-
-          )}
-
-        </div>
+		<div className="text-sm font-semibold">
+		  🔒 Read Only
+		</div>
 
       </div>
 
@@ -1363,41 +1024,77 @@ async function calculateMatchPointsGame3(
 
 
 
-  {p?.points_gained === 5 && (
+{p?.points_gained_game3 === 8 && (
 
-    <span
-      className="
-        inline-block
-        px-2
-        py-1
-        rounded-lg
-        font-bold
-        bg-yellow-500
-        text-black
-      "
-    >
-      5
-    </span>
+  <span
+    className="
+      inline-block
+      px-2
+      py-1
+      rounded-lg
+      font-bold
+      bg-yellow-500
+      text-black
+    "
+  >
+    8
+  </span>
 
-  )}
+)}
 
-  {p?.points_gained === 2 && (
+{p?.points_gained_game3 === 4 && (
 
-    <span
-      className="
-        inline-block
-        px-2
-        py-1
-        rounded-lg
-        font-bold
-        bg-gray-300
-        text-black
-      "
-    >
-      2
-    </span>
+  <span
+    className="
+      inline-block
+      px-2
+      py-1
+      rounded-lg
+      font-bold
+      bg-green-500
+      text-black
+    "
+  >
+    4
+  </span>
 
-  )}
+)}
+
+{p?.points_gained_game3 === 3 && (
+
+  <span
+    className="
+      inline-block
+      px-2
+      py-1
+      rounded-lg
+      font-bold
+      bg-gray-300
+      text-black
+    "
+  >
+    3
+  </span>
+
+)}
+
+{p?.points_gained_game3 === 1 && (
+
+  <span
+    className="
+      inline-block
+      px-2
+      py-1
+      rounded-lg
+      font-bold
+      bg-blue-500
+      text-white
+    "
+  >
+    1
+  </span>
+
+)}
 
 </td>
 
@@ -1418,83 +1115,161 @@ async function calculateMatchPointsGame3(
     "
   >
 
-    {livePoints === 5 && (
+{livePoints === 8 && (
 
-      <span
-        className="
-          inline-flex
-          items-center
-          gap-2
-		  animate-pulse
-        "
-      >
+  <span
+    className="
+      inline-flex
+      items-center
+      gap-2
+      animate-pulse
+    "
+  >
 
-        <span
-          className="
-            inline-block
-            px-2
-            py-1
-            rounded-lg
-            font-bold
-            bg-yellow-500
-            text-black
-          "
-        >
-          5
-        </span>
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-yellow-500
+        text-black
+      "
+    >
+      8
+    </span>
 
-        <span
-			className="
-			  text-red-400
-			  font-bold
-			  animate-pulse
-			"
-        >
-          LIVE
-        </span>
+    <span
+      className="
+        text-red-400
+        font-bold
+        animate-pulse
+      "
+    >
+      LIVE
+    </span>
 
-      </span>
+  </span>
 
-    )}
+)}
 
-    {livePoints === 2 && (
+{livePoints === 4 && (
 
-      <span
-        className="
-          inline-flex
-          items-center
-          gap-2
-		  animate-pulse
-        "
-      >
+  <span
+    className="
+      inline-flex
+      items-center
+      gap-2
+      animate-pulse
+    "
+  >
 
-        <span
-          className="
-            inline-block
-            px-2
-            py-1
-            rounded-lg
-            font-bold
-            bg-gray-300
-            text-black
-          "
-        >
-          2
-        </span>
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-green-500
+        text-black
+      "
+    >
+      4
+    </span>
 
-        <span
-			className="
-			  text-red-400
-			  font-bold
-			  animate-pulse
-			"
-        >
-          LIVE
-        </span>
+    <span
+      className="
+        text-red-400
+        font-bold
+        animate-pulse
+      "
+    >
+      LIVE
+    </span>
 
-      </span>
+  </span>
 
-    )}
+)}
+
+{livePoints === 3 && (
+
+  <span
+    className="
+      inline-flex
+      items-center
+      gap-2
+      animate-pulse
+    "
+  >
+
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-gray-300
+        text-black
+      "
+    >
+      3
+    </span>
+
+    <span
+      className="
+        text-red-400
+        font-bold
+        animate-pulse
+      "
+    >
+      LIVE
+    </span>
+
+  </span>
+
+)}
+
+{livePoints === 1 && (
+
+  <span
+    className="
+      inline-flex
+      items-center
+      gap-2
+      animate-pulse
+    "
+  >
+
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-blue-500
+        text-white
+      "
+    >
+      1
+    </span>
+
+    <span
+      className="
+        text-red-400
+        font-bold
+        animate-pulse
+      "
+    >
+      LIVE
+    </span>
+
+  </span>
+
+)}
 
   </td>
 
@@ -1528,7 +1303,7 @@ async function calculateMatchPointsGame3(
       <div className="glass-panel h-fit lg:col-span-1">
 
         <h2 className="text-3xl font-bold mb-6">
-          🏅 Game 2 Standings
+          🏅 Game 3 Standings
         </h2>
 
         <table className="table-modern">
