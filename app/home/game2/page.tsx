@@ -1575,7 +1575,7 @@ async function calculateMatchPointsGame3(
 											  className="
 												font-bold
 												text-xl
-												text-red-400
+												text-White-800
 											  "
 											>
 
@@ -1593,7 +1593,7 @@ async function calculateMatchPointsGame3(
 											  className="
 												font-bold
 												text-xl
-												text-red-400
+												text-White-800
 											  "
 											>
 											  {row.name}
@@ -1603,7 +1603,7 @@ async function calculateMatchPointsGame3(
 											  className="
 												font-extrabold
 												text-2xl
-												text-red-400
+												text-White-800
 											  "
 											>
 											  {row.points}
@@ -1615,7 +1615,7 @@ async function calculateMatchPointsGame3(
 
   <td></td>
 
-  <td></td>
+
 
 	<td
 	  className="
@@ -1668,7 +1668,7 @@ async function calculateMatchPointsGame3(
 
     </div>
 
-  </td>
+  </td>  <td></td>
 
 </tr>
 
