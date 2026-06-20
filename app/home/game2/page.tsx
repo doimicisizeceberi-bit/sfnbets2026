@@ -1668,7 +1668,8 @@ async function calculateMatchPointsGame3(
 
     </div>
 
-  </td>  <td></td>
+  </td>  
+  <td></td>
 
 </tr>
 

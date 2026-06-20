@@ -585,18 +585,54 @@ function canRevealPrediction(
 
 				if (!grouped[playerId]) {
 
-				  grouped[playerId] = {
+					grouped[playerId] = {
 
-					id: row.players.id,
+					  id: row.players.id,
 
-					name: row.players.name,
+					  name: row.players.name,
 
-					points: 0
-				  }
+					  points: 0,
+
+					  exactCount: 0,   // 8 pts
+
+					  closeCount: 0,   // 4 pts
+
+					  resultCount: 0,  // 3 pts
+
+					  goalCount: 0     // 1 pt
+					}
 				}
 
 				grouped[playerId].points +=
 				  row.points_gained_game3 || 0
+				  
+				  
+						if (row.points_gained_game3 === 8) {
+
+						  grouped[playerId].exactCount += 1
+
+						}
+
+						if (row.points_gained_game3 === 4) {
+
+						  grouped[playerId].closeCount += 1
+
+						}
+
+						if (row.points_gained_game3 === 3) {
+
+						  grouped[playerId].resultCount += 1
+
+						}
+
+						if (row.points_gained_game3 === 1) {
+
+						  grouped[playerId].goalCount += 1
+
+						}				  
+				  
+				  
+				  
 			  })
 
 			  const rows =
@@ -1321,29 +1357,158 @@ function canRevealPrediction(
 				  {leaderboard.map(
 					(row, index) => (
 
-					  <tr key={row.id}>
+<Fragment key={row.id}>
 
-<td>
+<tr>
 
-  {index === 0 ||
+  <td
+    className="
+      font-bold
+      text-xl
+      text-White-800
+    "
+  >
 
-   leaderboard[index - 1].points !==
-   row.points
+    {index === 0 ||
 
-    ? index + 1
-    : ''}
+     leaderboard[index - 1].points !==
+     row.points
 
-</td>
+      ? index + 1
+      : ''}
 
-						<td>
-						  {row.name}
-						</td>
+  </td>
 
-						<td className="font-bold">
-						  {row.points}
-						</td>
+  <td
+    className="
+      font-bold
+      text-xl
+      text-White-800
+    "
+  >
+    {row.name}
+  </td>
 
-					  </tr>
+  <td
+    className="
+      font-extrabold
+      text-2xl
+      text-White-800
+    "
+  >
+    {row.points}
+  </td>
+
+</tr>
+
+<tr>
+
+  <td></td>
+
+  <td
+    className="
+      text-xs
+      text-white/50
+      pb-3
+      pl-2
+    "
+  >
+
+<div className="mb-1">
+
+  <span
+    className="
+      inline-block
+      px-1.5
+      py-0.5
+      rounded-lg
+      font-bold
+      text-xs
+      bg-yellow-500
+      text-black
+      mr-1
+    "
+  >
+    8
+  </span>
+
+  × {row.exactCount}
+
+</div>
+
+<div className="mb-1">
+
+  <span
+    className="
+      inline-block
+      px-1.5
+      py-0.5
+      rounded-lg
+      font-bold
+      text-xs
+      bg-green-500
+      text-black
+      mr-1
+    "
+  >
+    4
+  </span>
+
+  × {row.closeCount}
+
+</div>
+
+<div className="mb-1">
+
+  <span
+    className="
+      inline-block
+      px-1.5
+      py-0.5
+      rounded-lg
+      font-bold
+      text-xs
+      bg-gray-300
+      text-black
+      mr-1
+    "
+  >
+    3
+  </span>
+
+  × {row.resultCount}
+
+</div>
+
+<div>
+
+  <span
+    className="
+      inline-block
+      px-1.5
+      py-0.5
+      rounded-lg
+      font-bold
+      text-xs
+      bg-blue-500
+      text-white
+      mr-1
+    "
+  >
+    1
+  </span>
+
+  × {row.goalCount}
+
+</div>
+
+  </td>
+
+  <td></td>
+
+</tr>
+
+</Fragment>
 
 					)
 				  )}
