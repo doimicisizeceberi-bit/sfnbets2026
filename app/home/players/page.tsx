@@ -1132,15 +1132,23 @@ export default function PlayersPage() {
 													Update
 												  </button>
 
-												  <button
-													disabled={
-													  !isValidPredictionScore(
-														prediction.team1_goals
-													  ) ||
-													  !isValidPredictionScore(
-														prediction.team2_goals
-													  )
-													}
+													<button
+													  disabled={
+														!isValidPredictionScore(
+														  prediction.team1_goals
+														) ||
+
+														!isValidPredictionScore(
+														  prediction.team2_goals
+														) ||
+
+														(
+														  match.match_type === 1 &&
+														  prediction.team1_goals ===
+															prediction.team2_goals &&
+														  prediction.predicted_advancing_team_id === null
+														)
+													  }
 													onClick={() =>
 													  setPendingLockPredictionId(
 														prediction.id
