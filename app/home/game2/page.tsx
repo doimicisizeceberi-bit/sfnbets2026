@@ -30,6 +30,11 @@ type Match = {
   team1_goals: number | null
   team2_goals: number | null
 
+	match_type: number
+
+	advancing_team_id: number | null
+
+
   locked: boolean
 
   team1?: {
@@ -47,6 +52,10 @@ type PredictionRow = {
 
   team1_goals: number | null
   team2_goals: number | null
+
+	predicted_advancing_team_id:
+	  number | null
+
 
   locked: boolean
 
@@ -261,6 +270,10 @@ useEffect(() => {
 					  team2_goals:
 						row.team2_goals,
 
+						predicted_advancing_team_id:
+						  row.predicted_advancing_team_id,
+
+
 					  locked:
 						row.locked,
 
@@ -313,6 +326,9 @@ useEffect(() => {
 				  team1_id: teams[0]?.id,
 				  team2_id: teams[1]?.id,
 
+					match_type: 0,
+					advancing_team_id: null,
+
 				  locked: false,
 				  visible: false
 				})
@@ -344,6 +360,9 @@ useEffect(() => {
 		match_time: match.match_time,
         team1_id: match.team1_id,
         team2_id: match.team2_id,
+
+		match_type: match.match_type,
+		advancing_team_id: match.advancing_team_id,
 
         team1_goals: match.team1_goals,
         team2_goals: match.team2_goals,
@@ -485,8 +504,6 @@ function canRevealPrediction(
 }
 
 
-
-
 					async function calculateMatchPoints(
 					  matchId: number
 					) {
@@ -523,6 +540,21 @@ function canRevealPrediction(
 						const predictedScore2 =
 						  prediction.team2_goals
 
+						const officialResult =
+						  getMatchResult(
+							officialScore1,
+							officialScore2
+						  )
+
+						const predictedResult =
+						  predictedScore1 === null ||
+						  predictedScore2 === null
+							? null
+							: getMatchResult(
+								predictedScore1,
+								predictedScore2
+							  )
+
 						if (
 						  predictedScore1 === null ||
 						  predictedScore2 === null
@@ -544,24 +576,40 @@ function canRevealPrediction(
 
 						} else {
 
-						  const officialResult =
-							getMatchResult(
-							  officialScore1,
-							  officialScore2
-							)
-
-						  const predictedResult =
-							getMatchResult(
-							  predictedScore1,
-							  predictedScore2
-							)
-
 						  if (
 							officialResult ===
 							predictedResult
 						  ) {
+
 							points = 2
+
 						  }
+
+						}
+
+						//
+						// Knockout draw qualification bonus
+						//
+
+						if (
+
+						  match.match_type === 1 &&
+
+						  officialResult === 'DRAW' &&
+
+						  predictedResult === 'DRAW' &&
+
+						  prediction.predicted_advancing_team_id !== null &&
+
+						  match.advancing_team_id !== null &&
+
+						  prediction.predicted_advancing_team_id ===
+							match.advancing_team_id
+
+						) {
+
+						  points += 1
+
 						}
 
 						await supabase
@@ -572,12 +620,6 @@ function canRevealPrediction(
 						  .eq('id', prediction.id)
 					  }
 					}
-					
-	
-
-
-
-	
 					
 async function calculateMatchPointsGame3(
   matchId: number
@@ -615,6 +657,21 @@ async function calculateMatchPointsGame3(
 
     const predictedScore2 =
       prediction.team2_goals
+
+	const officialResult =
+	  getMatchResult(
+		officialScore1,
+		officialScore2
+	  )
+
+	const predictedResult =
+	  predictedScore1 === null ||
+	  predictedScore2 === null
+		? null
+		: getMatchResult(
+			predictedScore1,
+			predictedScore2
+		  )
 
     if (
       predictedScore1 === null ||
@@ -778,7 +835,9 @@ async function calculateMatchPointsGame3(
 
 					  exactCount: 0,
 
-					  resultCount: 0
+					  resultCount: 0,
+
+					  bonusCount: 0
 					}
 				}
 
@@ -786,17 +845,41 @@ async function calculateMatchPointsGame3(
 				  row.points_gained || 0
 				  
 				  
-					if (row.points_gained === 5) {
+							if (
 
-					  grouped[playerId].exactCount += 1
+							  row.points_gained === 5 ||
 
-					}
+							  row.points_gained === 6
 
-					if (row.points_gained === 2) {
+							) {
 
-					  grouped[playerId].resultCount += 1
+							  grouped[playerId].exactCount += 1
 
-					}				  
+							}
+
+							if (
+
+							  row.points_gained === 2 ||
+
+							  row.points_gained === 3
+
+							) {
+
+							  grouped[playerId].resultCount += 1
+
+							}
+
+							if (
+
+							  row.points_gained === 6 ||
+
+							  row.points_gained === 3
+
+							) {
+
+							  grouped[playerId].bonusCount += 1
+
+							}				  
 				  
 				  
 				  
@@ -1005,6 +1088,41 @@ async function calculateMatchPointsGame3(
 
           className="bg-transparent border border-white/10 rounded px-2 py-1 w-[90px]"
         />
+		
+		<select
+		  disabled={match.locked}
+		  value={match.match_type}
+		  onChange={(e) =>
+			updateLocalMatch(
+			  match.id,
+			  'match_type',
+			  Number(e.target.value)
+			)
+		  }
+		  className="
+			  bg-white/10
+			  border
+			  border-white/20
+			  rounded
+			  px-3
+			  py-2
+			  text-white
+			"
+		>
+				<option
+				  value={0}
+				  className="bg-slate-800 text-white"
+				>
+				  Group
+				</option>
+
+				<option
+				  value={1}
+				  className="bg-slate-800 text-white"
+				>
+				  Knockout
+				</option>
+		</select>
 
         {match.locked && (
 
@@ -1018,165 +1136,230 @@ async function calculateMatchPointsGame3(
 
       <div className="grid grid-cols-[1fr_auto_auto_auto_1fr_auto] gap-3 items-center">
 
-        <select
-          disabled={match.locked}
+									<select
+									  disabled={match.locked}
 
-          value={match.team1_id}
+									  value={match.team1_id}
 
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team1_id',
-              Number(e.target.value)
-            )
-          }
+									  onChange={(e) =>
+										updateLocalMatch(
+										  match.id,
+										  'team1_id',
+										  Number(e.target.value)
+										)
+									  }
 
-          className="input-modern"
-        >
+									  className="input-modern"
+									>
 
-          {teams
-            .filter(
-              (team) =>
-                team.id !==
-                match.team2_id
-            )
-            .map((team) => (
+									  {teams
+										.filter(
+										  (team) =>
+											team.id !==
+											match.team2_id
+										)
+										.map((team) => (
 
-              <option
-                key={team.id}
-                value={team.id}
-              >
-                {team.name}
-              </option>
+										  <option
+											key={team.id}
+											value={team.id}
+										  >
+											{team.name}
+										  </option>
 
-            ))}
+										))}
 
-        </select>
+									</select>
 
-        <input
-          type="number"
+									<input
+									  type="number"
 
-          disabled={match.locked}
+									  disabled={match.locked}
 
-          value={
-            match.team1_goals ?? ''
-          }
+									  value={
+										match.team1_goals ?? ''
+									  }
 
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team1_goals',
-              e.target.value === ''
-                ? null
-                : Number(e.target.value)
-            )
-          }
+									  onChange={(e) =>
+										updateLocalMatch(
+										  match.id,
+										  'team1_goals',
+										  e.target.value === ''
+											? null
+											: Number(e.target.value)
+										)
+									  }
 
-          className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-        />
+									  className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
+									/>
 
-        <div className="font-bold text-xl">
-          -
-        </div>
+									<div className="font-bold text-xl">
+									  -
+									</div>
 
-        <input
-          type="number"
+									<input
+									  type="number"
 
-          disabled={match.locked}
+									  disabled={match.locked}
 
-          value={
-            match.team2_goals ?? ''
-          }
+									  value={
+										match.team2_goals ?? ''
+									  }
 
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team2_goals',
-              e.target.value === ''
-                ? null
-                : Number(e.target.value)
-            )
-          }
+									  onChange={(e) =>
+										updateLocalMatch(
+										  match.id,
+										  'team2_goals',
+										  e.target.value === ''
+											? null
+											: Number(e.target.value)
+										)
+									  }
 
-          className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-        />
+									  className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
+									/>
 
-        <select
-          disabled={match.locked}
+									<select
+									  disabled={match.locked}
 
-          value={match.team2_id}
+									  value={match.team2_id}
 
-          onChange={(e) =>
-            updateLocalMatch(
-              match.id,
-              'team2_id',
-              Number(e.target.value)
-            )
-          }
+									  onChange={(e) =>
+										updateLocalMatch(
+										  match.id,
+										  'team2_id',
+										  Number(e.target.value)
+										)
+									  }
 
-          className="input-modern"
-        >
+									  className="input-modern"
+									>
 
-          {teams
-            .filter(
-              (team) =>
-                team.id !==
-                match.team1_id
-            )
-            .map((team) => (
+									  {teams
+										.filter(
+										  (team) =>
+											team.id !==
+											match.team1_id
+										)
+										.map((team) => (
 
-              <option
-                key={team.id}
-                value={team.id}
-              >
-                {team.name}
-              </option>
+										  <option
+											key={team.id}
+											value={team.id}
+										  >
+											{team.name}
+										  </option>
 
-            ))}
+										))}
 
-        </select>
+									</select>
 
-        <div>
+									<div>
 
-          {!match.locked ? (
+									  {!match.locked ? (
 
-            <div className="flex gap-2">
+										<div className="flex gap-2">
 
-              <button
-                onClick={() =>
-                  updateMatch(match)
-                }
-                className="btn-primary"
-              >
-                Update
-              </button>
+										  <button
+											onClick={() =>
+											  updateMatch(match)
+											}
+											className="btn-primary"
+										  >
+											Update
+										  </button>
 
-              <button
-                disabled={
-                  match.team1_goals === null ||
-                  match.team2_goals === null
-                }
-                onClick={() =>
-                  lockMatch(match.id)
-                }
-                className="btn-primary"
-              >
-                🔒
-              </button>
+										  <button
+												disabled={
+												  match.team1_goals === null ||
 
-            </div>
+												  match.team2_goals === null ||
 
-          ) : (
+												  (
+													match.match_type === 1 &&
+													match.team1_goals ===
+													  match.team2_goals &&
+													match.advancing_team_id === null
+												  )
+												}
+											onClick={() =>
+											  lockMatch(match.id)
+											}
+											className="btn-primary"
+										  >
+											🔒
+										  </button>
 
-            <div className="text-sm font-semibold">
-              🔒 Match #{match.id}
-            </div>
+										</div>
 
-          )}
+									  ) : (
 
-        </div>
+										<div className="text-sm font-semibold">
+										  🔒 Match #{match.id}
+										</div>
+
+									  )}
+
+									</div>
 
       </div>
+	  
+						  
+					{!match.locked &&
+					 match.match_type === 1 &&
+					 match.team1_goals !== null &&
+					 match.team2_goals !== null &&
+					 match.team1_goals === match.team2_goals && (
+
+					  <div className="mt-4 flex gap-6">
+
+						<label className="flex items-center gap-2">
+
+						  <input
+							type="radio"
+							checked={
+							  match.advancing_team_id ===
+							  match.team1_id
+							}
+							onChange={() =>
+							  updateLocalMatch(
+								match.id,
+								'advancing_team_id',
+								match.team1_id
+							  )
+							}
+						  />
+
+						  {match.team1?.name}
+
+						</label>
+
+						<label className="flex items-center gap-2">
+
+						  <input
+							type="radio"
+							checked={
+							  match.advancing_team_id ===
+							  match.team2_id
+							}
+							onChange={() =>
+							  updateLocalMatch(
+								match.id,
+								'advancing_team_id',
+								match.team2_id
+							  )
+							}
+						  />
+
+						  {match.team2?.name}
+
+						</label>
+
+					  </div>
+
+					)}	  
+	  
+	  
 
       </div>
 
@@ -1365,7 +1548,32 @@ async function calculateMatchPointsGame3(
 							  ? (
 								  maskPrediction
 									? '??'
-									: `${p.team1_goals}-${p.team2_goals}`
+										: (
+												<>
+												  {p.team1_goals}-{p.team2_goals}
+
+												  {match.match_type === 1 &&
+												   p.team1_goals === p.team2_goals &&
+												   p.predicted_advancing_team_id && (
+
+													<span
+													  className="
+														text-xs
+														text-white/70
+														ml-1
+													  "
+													>
+													  ➜ {
+														p.predicted_advancing_team_id ===
+														match.team1_id
+														  ? match.team1?.name
+														  : match.team2?.name
+													  }
+													</span>
+
+												  )}
+												</>
+										  )
 								)
 							  : '❗'}
 
@@ -1373,60 +1581,122 @@ async function calculateMatchPointsGame3(
 
 						</td>
 
-                    {match.locked && (
+{match.locked && (
 
-<td
-  className="
-    text-left
-    pl-3
-  "
->
+  <td
+    className="
+      text-left
+      pl-3
+    "
+  >
 
+    <div className="flex items-center gap-1">
 
+      {p?.points_gained === 6 && (
+        <>
+          <span
+            className="
+              inline-block
+              px-2
+              py-1
+              rounded-lg
+              font-bold
+              bg-yellow-500
+              text-black
+            "
+          >
+            5
+          </span>
 
-  {p?.points_gained === 5 && (
+          <span
+            className="
+              inline-block
+              px-2
+              py-1
+              rounded-lg
+              font-bold
+              bg-blue-500
+              text-white
+            "
+          >
+            1
+          </span>
+        </>
+      )}
 
-    <span
-      className="
-        inline-block
-        px-2
-        py-1
-        rounded-lg
-        font-bold
-        bg-yellow-500
-        text-black
-      "
-    >
-      5
-    </span>
+      {p?.points_gained === 5 && (
 
-  )}
+        <span
+          className="
+            inline-block
+            px-2
+            py-1
+            rounded-lg
+            font-bold
+            bg-yellow-500
+            text-black
+          "
+        >
+          5
+        </span>
 
-  {p?.points_gained === 2 && (
+      )}
 
-    <span
-      className="
-        inline-block
-        px-2
-        py-1
-        rounded-lg
-        font-bold
-        bg-gray-300
-        text-black
-      "
-    >
-      2
-    </span>
+      {p?.points_gained === 3 && (
+        <>
+          <span
+            className="
+              inline-block
+              px-2
+              py-1
+              rounded-lg
+              font-bold
+              bg-gray-300
+              text-black
+            "
+          >
+            2
+          </span>
 
-  )}
+          <span
+            className="
+              inline-block
+              px-2
+              py-1
+              rounded-lg
+              font-bold
+              bg-blue-500
+              text-white
+            "
+          >
+            1
+          </span>
+        </>
+      )}
 
-</td>
+      {p?.points_gained === 2 && (
 
+        <span
+          className="
+            inline-block
+            px-2
+            py-1
+            rounded-lg
+            font-bold
+            bg-gray-300
+            text-black
+          "
+        >
+          2
+        </span>
 
+      )}
 
+    </div>
 
+  </td>
 
-                    )}
+)}
 					
 					
 					
@@ -1667,6 +1937,32 @@ async function calculateMatchPointsGame3(
       × {row.resultCount}
 
     </div>
+	
+	<div className="mt-1">
+
+	  <span
+		className="
+		  inline-block
+		  px-2
+		  py-1
+		  rounded-lg
+		  font-bold
+		  text-xs
+		  bg-blue-500
+		  text-white
+		  mr-1
+		"
+	  >
+		1
+	  </span>
+
+		× {row.bonusCount || 0}
+
+	</div>	
+	
+	
+	
+	
 
   </td>  
   <td></td>

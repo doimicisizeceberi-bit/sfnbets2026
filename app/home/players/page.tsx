@@ -281,6 +281,12 @@ export default function PlayersPage() {
 						.update({
 						  team1_goals: team1Goals,
 						  team2_goals: team2Goals,
+						  
+							predicted_advancing_team_id:
+							  game2Predictions.find(
+								p => p.id === predictionId
+							  )?.predicted_advancing_team_id ?? null,	  
+						  
 						  locked: false
 						})
 						.eq('id', predictionId)
@@ -340,6 +346,10 @@ export default function PlayersPage() {
 												  .update({
 													team1_goals: prediction.team1_goals,
 													team2_goals: prediction.team2_goals,
+													
+													predicted_advancing_team_id:
+													  prediction.predicted_advancing_team_id ?? null,
+																									
 													locked: true
 												  })
 												  .eq('id', predictionId)
@@ -997,157 +1007,248 @@ export default function PlayersPage() {
 
                   <div className="grid grid-cols-[1fr_auto_auto_auto_1fr_auto] gap-3 items-center">
 
-                    <div className="input-modern">
-                      {match.team1?.name}
-                    </div>
+											<div className="input-modern">
+											  {match.team1?.name}
+											</div>
 
-					{maskPrediction ? (
+											{maskPrediction ? (
 
-					  <div className="w-16 h-12 flex items-center justify-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white">
-						??
-					  </div>
+											  <div className="w-16 h-12 flex items-center justify-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white">
+												??
+											  </div>
 
-					) : (
+											) : (
 
-					  <input
-						type="number"
-						min={0}
-						max={10}
-						step={1}
+											  <input
+												type="number"
+												min={0}
+												max={10}
+												step={1}
 
-						disabled={
-						  prediction.locked
-						}
+												disabled={
+												  prediction.locked
+												}
 
-						value={
-						  prediction.team1_goals ?? ''
-						}
+												value={
+												  prediction.team1_goals ?? ''
+												}
 
-						onChange={(e) =>
-						  updateLocalGame2Prediction(
-							prediction.id,
-							'team1_goals',
-							e.target.value === ''
-							  ? null
-							  : Number(
-								  e.target.value
-								)
-						  )
-						}
+												onChange={(e) =>
+												  updateLocalGame2Prediction(
+													prediction.id,
+													'team1_goals',
+													e.target.value === ''
+													  ? null
+													  : Number(
+														  e.target.value
+														)
+												  )
+												}
 
-						className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-					  />
+												className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
+											  />
 
-					)}
+											)}
 
-                    <div className="font-bold text-xl">
-                      -
-                    </div>
+											<div className="font-bold text-xl">
+											  -
+											</div>
 
-					{maskPrediction ? (
+											{maskPrediction ? (
 
-					  <div className="w-16 h-12 flex items-center justify-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white">
-						??
-					  </div>
+											  <div className="w-16 h-12 flex items-center justify-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white">
+												??
+											  </div>
 
-					) : (
+											) : (
 
-					  <input
-						type="number"
-						min={0}
-						max={10}
-						step={1}
+											  <input
+												type="number"
+												min={0}
+												max={10}
+												step={1}
 
-						disabled={
-						  prediction.locked
-						}
+												disabled={
+												  prediction.locked
+												}
 
-						value={
-						  prediction.team2_goals ?? ''
-						}
+												value={
+												  prediction.team2_goals ?? ''
+												}
 
-						onChange={(e) =>
-						  updateLocalGame2Prediction(
-							prediction.id,
-							'team2_goals',
-							e.target.value === ''
-							  ? null
-							  : Number(
-								  e.target.value
-								)
-						  )
-						}
+												onChange={(e) =>
+												  updateLocalGame2Prediction(
+													prediction.id,
+													'team2_goals',
+													e.target.value === ''
+													  ? null
+													  : Number(
+														  e.target.value
+														)
+												  )
+												}
 
-						className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
-					  />
+												className="w-16 h-12 text-center text-xl font-bold rounded-lg bg-white/10 border border-white/20 text-white"
+											  />
 
-					)}
+											)}
 
-                    <div className="input-modern">
-                      {match.team2?.name}
-                    </div>
+											<div className="input-modern">
+											  {match.team2?.name}
+											</div>
 
-                    <div>
+											<div>
 
-                      {!prediction.locked ? (
+											  {!prediction.locked ? (
 
-                        <div className="flex gap-2">
+												<div className="flex gap-2">
 
-                          <button
-							disabled={
-							  !isValidPredictionScore(
-								prediction.team1_goals
-							  ) ||
-							  !isValidPredictionScore(
-								prediction.team2_goals
-							  )
-							}
-                            onClick={() =>
-                              updateGame2Prediction(
-                                prediction.id,
-                                prediction.team1_goals,
-                                prediction.team2_goals
-                              )
-                            }
-                            className="btn-primary"
-                          >
-                            Update
-                          </button>
+												  <button
+													disabled={
+													  !isValidPredictionScore(
+														prediction.team1_goals
+													  ) ||
 
-                          <button
-                            disabled={
-							  !isValidPredictionScore(
-								prediction.team1_goals
-							  ) ||
-							  !isValidPredictionScore(
-								prediction.team2_goals
-							  )
-                            }
-                            onClick={() =>
-                              setPendingLockPredictionId(
-                                prediction.id
-                              )
-                            }
-                            className="btn-primary"
-                          >
-                            🔒
-                          </button>
+													  !isValidPredictionScore(
+														prediction.team2_goals
+													  ) ||
 
-                        </div>
+													  (
+														match.match_type === 1 &&
+														prediction.team1_goals ===
+														  prediction.team2_goals &&
+														prediction.predicted_advancing_team_id === null
+													  )
+													}
+													onClick={() =>
+													  updateGame2Prediction(
+														prediction.id,
+														prediction.team1_goals,
+														prediction.team2_goals
+													  )
+													}
+													className="btn-primary"
+												  >
+													Update
+												  </button>
 
-                      ) : (
+												  <button
+													disabled={
+													  !isValidPredictionScore(
+														prediction.team1_goals
+													  ) ||
+													  !isValidPredictionScore(
+														prediction.team2_goals
+													  )
+													}
+													onClick={() =>
+													  setPendingLockPredictionId(
+														prediction.id
+													  )
+													}
+													className="btn-primary"
+												  >
+													🔒
+												  </button>
 
-                        <div className="text-sm font-semibold">
-                          🔒 Locked
-                          {' '}
-                          (#{prediction.id})
-                        </div>
+												</div>
 
-                      )}
+											  ) : (
 
-                    </div>
+												<div className="text-sm font-semibold">
+												  🔒 Locked
+												  {' '}
+												  (#{prediction.id})
+												</div>
+
+											  )}
+
+											</div>
 
                   </div>
+											  
+							{!prediction.locked &&
+							 match.match_type === 1 &&
+							 prediction.team1_goals !== null &&
+							 prediction.team2_goals !== null &&
+							 prediction.team1_goals === prediction.team2_goals && (
+
+							  <div className="mt-4 flex gap-6">
+
+
+								<div className="mt-4">
+
+								  <div
+									className="
+									  text-sm
+									  text-white/70
+									  font-semibold
+									  mb-2
+									"
+								  >
+									Învingătoare la penalty-uri:
+								  </div>
+
+								  <div className="flex gap-6">
+
+											<label className="flex items-center gap-2">
+
+											  <input
+												type="radio"
+
+												checked={
+												  prediction.predicted_advancing_team_id ===
+												  match.team1_id
+												}
+
+												onChange={() =>
+												  updateLocalGame2Prediction(
+													prediction.id,
+													'predicted_advancing_team_id',
+													match.team1_id
+												  )
+												}
+											  />
+
+											  {match.team1?.name}
+
+											</label>
+
+											<label className="flex items-center gap-2">
+
+											  <input
+												type="radio"
+
+												checked={
+												  prediction.predicted_advancing_team_id ===
+												  match.team2_id
+												}
+
+												onChange={() =>
+												  updateLocalGame2Prediction(
+													prediction.id,
+													'predicted_advancing_team_id',
+													match.team2_id
+												  )
+												}
+											  />
+
+											  {match.team2?.name}
+
+											</label>
+
+								  </div>
+
+								</div>
+
+
+
+
+
+							  </div>
+
+							)}				  
+				  
 
                 </div>
 
@@ -1184,15 +1285,38 @@ export default function PlayersPage() {
 			Confirm?
 		  </h2>
 
-		  <div className="text-xl font-semibold mb-8">
-			{pendingLockMatch.team1?.name}
-			-
-			{pendingLockMatch.team2?.name}
-			{' '}
-			{pendingLockPrediction.team1_goals}
-			-
-			{pendingLockPrediction.team2_goals}
-		  </div>
+				<div className="text-xl font-semibold mb-8">
+
+				  {pendingLockMatch.team1?.name}
+				  -
+				  {pendingLockMatch.team2?.name}
+				  {' '}
+				  {pendingLockPrediction.team1_goals}
+				  -
+				  {pendingLockPrediction.team2_goals}
+
+				  {
+					pendingLockMatch.match_type === 1 &&
+					pendingLockPrediction.team1_goals ===
+					  pendingLockPrediction.team2_goals &&
+					pendingLockPrediction
+					  .predicted_advancing_team_id && (
+						<>
+						  {' '}
+						  ➜
+						  {' '}
+						  {
+							pendingLockPrediction
+							  .predicted_advancing_team_id ===
+							pendingLockMatch.team1_id
+							  ? pendingLockMatch.team1?.name
+							  : pendingLockMatch.team2?.name
+						  }
+						</>
+					  )
+				  }
+
+				</div>
 
 		  <div className="flex justify-end gap-3">
 

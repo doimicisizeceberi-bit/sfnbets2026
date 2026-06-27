@@ -1148,6 +1148,47 @@ async function updateLiveMatch() {
 </div>	  
 	  
 
+
+<div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+
+  <div className="flex justify-between items-center gap-6">
+
+    <div>
+
+      <h2 className="text-2xl font-bold mb-2">
+        📦 Database Backup
+      </h2>
+
+      <div className="text-white/70">
+        Download a complete backup of the SFNBets database
+      </div>
+
     </div>
+
+    <div className="flex items-center gap-3">
+
+      <button
+
+        onClick={() =>
+          window.open(
+            '/api/admin/backup',
+            '_blank'
+          )
+        }
+
+        className="btn-primary"
+      >
+        📥 Download Backup
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+    </div>
+	
   )
 }
