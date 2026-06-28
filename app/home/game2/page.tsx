@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
 
 type Team = {
   id: number
@@ -1869,9 +1870,23 @@ async function calculateMatchPointsGame3(
 
       <div className="glass-panel h-fit lg:col-span-1">
 
-        <h2 className="text-3xl font-bold mb-6">
-          🏅 Game 2 Standings
-        </h2>
+<h2 className="text-3xl font-bold mb-6">
+  🏅 Game 2 Standings
+
+  <Link
+    href="/home/game2/race"
+    className="
+      ml-3
+      text-lg
+      text-cyan-400
+      hover:text-cyan-300
+      underline
+      font-medium
+    "
+  >
+    🏁 Race
+  </Link>
+</h2>
 
         <table className="table-modern">
 
