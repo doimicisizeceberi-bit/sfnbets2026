@@ -607,25 +607,39 @@ function canRevealPrediction(
 				  row.points_gained_game3 || 0
 				  
 				  
-						if (row.points_gained_game3 === 8) {
+						if (
+
+						  row.points_gained_game3 === 8 ||
+
+						  row.points_gained_game3 === 9
+
+						) {
 
 						  grouped[playerId].exactCount += 1
 
 						}
 
-						if (row.points_gained_game3 === 4) {
+						if (
 
-						  grouped[playerId].closeCount += 1
+						  row.points_gained_game3 === 3 ||
 
-						}
+						  row.points_gained_game3 === 4
 
-						if (row.points_gained_game3 === 3) {
+						) {
 
 						  grouped[playerId].resultCount += 1
 
 						}
 
-						if (row.points_gained_game3 === 1) {
+						if (
+
+						  row.points_gained_game3 === 9 ||
+
+						  row.points_gained_game3 === 4 ||
+
+						  row.points_gained_game3 === 1
+
+						) {
 
 						  grouped[playerId].goalCount += 1
 
@@ -664,20 +678,14 @@ function canRevealPrediction(
 			⚽ Game 3 Concept
 		  </h1>
 				<div className="mt-2 text-sm text-white/70">
-				  
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 
-					TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - TEST - 					
+				  					
 				  Joc TEST • Premii:
-				  <span className="font-semibold"> 8p</span> scor corect,
-				  <span className="font-semibold"> 3p</span> pronostic corect (1/X/2),
-				  <span className="font-semibold"> 1p bonus</span> pentru diferență exacta de scor la victorie
-				  <span className="font-semibold"> sau</span> numar exact de goluri marcate de gazde
-				  <span className="font-semibold"> sau</span> numar exact de goluri marcate de oaspeți.
+				  <br /><span className="font-semibold"> 8p</span> scor corect,
+				  <br /><span className="font-semibold"> 3p</span> pronostic corect (1/X/2),
+				  <br /><span className="font-semibold"> 1p bonus</span> pentru diferență exacta de scor la victorie
+				  <br /><span className="font-semibold"> 1p bonus</span> pentru numar exact de goluri marcate de gazde
+				  <br /><span className="font-semibold"> 1p bonus</span> pentru numar exact de goluri marcate de oaspeți			  
+				  <br /><span className="font-semibold"> 1p bonus</span> pentru castigatoare la penalty-uri in meciuri eliminatorii
 				</div>
 		</div>
 
@@ -1068,6 +1076,40 @@ function canRevealPrediction(
 
 
 
+{p?.points_gained_game3 === 9 && (
+
+  <>
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-yellow-500
+        text-black
+      "
+    >
+      8
+    </span>
+
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-blue-500
+        text-white
+      "
+    >
+      1
+    </span>
+  </>
+
+)}
+
 {p?.points_gained_game3 === 8 && (
 
   <span
@@ -1088,19 +1130,35 @@ function canRevealPrediction(
 
 {p?.points_gained_game3 === 4 && (
 
-  <span
-    className="
-      inline-block
-      px-2
-      py-1
-      rounded-lg
-      font-bold
-      bg-green-500
-      text-black
-    "
-  >
-    4
-  </span>
+  <>
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-gray-300
+        text-black
+      "
+    >
+      3
+    </span>
+
+    <span
+      className="
+        inline-block
+        px-2
+        py-1
+        rounded-lg
+        font-bold
+        bg-blue-500
+        text-white
+      "
+    >
+      1
+    </span>
+  </>
 
 )}
 
@@ -1444,27 +1502,6 @@ function canRevealPrediction(
 
 </div>
 
-<div className="mb-1">
-
-  <span
-    className="
-      inline-block
-      px-1.5
-      py-0.5
-      rounded-lg
-      font-bold
-      text-xs
-      bg-green-500
-      text-black
-      mr-1
-    "
-  >
-    4
-  </span>
-
-  × {row.closeCount}
-
-</div>
 
 <div className="mb-1">
 

@@ -680,14 +680,35 @@ async function calculateMatchPointsGame3(
 
       points = 0
 
-    } else if (
+		} else if (
 
-      predictedScore1 === officialScore1 &&
-      predictedScore2 === officialScore2
+		  predictedScore1 === officialScore1 &&
+		  predictedScore2 === officialScore2
 
-    ) {
+		) {
 
-      points = 8
+		  points = 8
+
+		  // Knockout exact draw bonus
+
+		  if (
+
+			match.match_type > 0 &&
+
+			officialResult === 'DRAW' &&
+
+			prediction.predicted_advancing_team_id !== null &&
+
+			match.advancing_team_id !== null &&
+
+			prediction.predicted_advancing_team_id ===
+			  match.advancing_team_id
+
+		  ) {
+
+			points = 9
+
+		  }
 
     } else {
 
@@ -730,36 +751,66 @@ async function calculateMatchPointsGame3(
         predictedResult
       ) {
 
-        // DRAWS
-        // Always 3 unless exact score (already handled above)
+				// DRAWS
 
-        if (
-          officialResult === 'DRAW'
-        ) {
+				if (
+				  officialResult === 'DRAW'
+				) {
 
-          points = 3
+				  points = 3
 
-        } else {
+				  // Knockout draw bonus
 
-          // HOME WIN / AWAY WIN
+				  if (
 
-          points = 3
+					match.match_type > 0 &&
 
-          if (
+					prediction.predicted_advancing_team_id !== null &&
 
-            correctGoalDiff ||
+					match.advancing_team_id !== null &&
 
-            correctHomeGoals ||
+					prediction.predicted_advancing_team_id ===
+					  match.advancing_team_id
 
-            correctAwayGoals
+				  ) {
 
-          ) {
+					points = 4
 
-            points = 4
+				  }
 
-          }
+				} else {
 
-        }
+				  // HOME WIN / AWAY WIN
+
+				  points = 3
+
+				  // Exact goal difference bonus
+
+				  if (
+
+					correctGoalDiff
+
+				  ) {
+
+					points = 4
+
+				  }
+
+				  // Otherwise check exact home/away goals
+
+				  else if (
+
+					correctHomeGoals ||
+
+					correctAwayGoals
+
+				  ) {
+
+					points = 4
+
+				  }
+
+				}
 
       } else {
 
