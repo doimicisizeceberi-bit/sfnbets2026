@@ -265,62 +265,90 @@ async function loadLeaderboard() {
 
   if (!predictions) return
 
-  const rows = predictions.map((prediction: any) => {
+const rows = predictions.map((prediction: any) => {
 
-    let score = 0
+  let score = 0
 
-    if (
-      prediction.champion_team_id ===
-      results.champion_team_id
-    ) {
-      score += 20
+  // Winner / Finalist
+
+  if (
+    prediction.champion_team_id ===
+    results.champion_team_id
+  ) {
+
+    score += 20
+
+  } else if (
+
+    prediction.champion_team_id ===
+    results.finalist_team_id
+
+  ) {
+
+    score += 5
+  }
+
+  if (
+    prediction.finalist_team_id ===
+    results.finalist_team_id
+  ) {
+
+    score += 10
+
+  } else if (
+
+    prediction.finalist_team_id ===
+    results.champion_team_id
+
+  ) {
+
+    score += 5
+  }
+
+  // Semifinalists
+
+  const resultSemis = [
+    results.semifinalist1_team_id,
+    results.semifinalist2_team_id,
+  ]
+
+  const predictionSemis = [
+    prediction.semifinalist1_team_id,
+    prediction.semifinalist2_team_id,
+  ]
+
+  predictionSemis.forEach((semi: any) => {
+
+    if (resultSemis.includes(semi)) {
+      score += 5
     }
 
-    if (
-      prediction.finalist_team_id ===
-      results.finalist_team_id
-    ) {
-      score += 10
-    }
-
-    const resultSemis = [
-      results.semifinalist1_team_id,
-      results.semifinalist2_team_id,
-    ]
-
-    const predictionSemis = [
-      prediction.semifinalist1_team_id,
-      prediction.semifinalist2_team_id,
-    ]
-
-    predictionSemis.forEach((semi: any) => {
-
-      if (resultSemis.includes(semi)) {
-        score += 5
-      }
-
-    })
-
-    if (
-      prediction.top_goal_player_id ===
-      results.top_goal_player_id
-    ) {
-      score += 10
-    }
-
-    if (
-      prediction.surprise_team_id ===
-      results.surprise_team_id
-    ) {
-      score += 10
-    }
-
-    return {
-      id: prediction.players.id,
-      name: prediction.players.name,
-      score,
-    }
   })
+
+  // Top scorer
+
+  if (
+    prediction.top_goal_player_id ===
+    results.top_goal_player_id
+  ) {
+    score += 10
+  }
+
+  // Surprise team
+
+  if (
+    prediction.surprise_team_id ===
+    results.surprise_team_id
+  ) {
+    score += 10
+  }
+
+  return {
+    id: prediction.players.id,
+    name: prediction.players.name,
+    score,
+  }
+})
 
   rows.sort((a, b) => {
 
